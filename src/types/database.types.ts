@@ -195,6 +195,26 @@ export type Maintenance = {
   updated_at: string;
 };
 
+export type AppSettings = {
+  id: number;
+  business_name: string | null;
+  logo_storage_path: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  currency: string;
+  timezone: string;
+  tax_rate: number;
+  default_daily_rate: number | null;
+  grace_period_hours: number;
+  late_fee_per_day: number;
+  default_security_deposit: number;
+  mileage_limit_per_day: number | null;
+  mileage_overage_fee: number | null;
+  fuel_policy: string | null;
+  updated_at: string;
+};
+
 /**
  * Minimal Database shape so `createClient<Database>()` type-checks.
  * `Relationships: []` + empty `Views`/`Functions` are required to satisfy
@@ -219,6 +239,7 @@ export type Database = {
       payments: Table<Payment>;
       vehicle_issues: Table<VehicleIssue>;
       maintenance: Table<Maintenance>;
+      app_settings: Table<AppSettings>;
     };
     Views: Record<string, never>;
     Functions: {

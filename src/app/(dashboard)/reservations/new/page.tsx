@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { canAccess } from "@/lib/auth/roles";
 import { getCustomer } from "@/lib/customers/queries";
 import { getAvailableVehicles } from "@/lib/rentals/queries";
+import { getAppSettings } from "@/lib/settings/queries";
 
 export default async function NewReservationPage(props: PageProps<"/reservations/new">) {
   const { profile } = await requireRole(["super_admin", "manager", "staff"]);
@@ -13,9 +14,10 @@ export default async function NewReservationPage(props: PageProps<"/reservations
   const searchParams = await props.searchParams;
   const customerId = typeof searchParams.customerId === "string" ? searchParams.customerId : null;
 
-  const [initialCustomer, vehicles] = await Promise.all([
+  const [initialCustomer, vehicles, settings] = await Promise.all([
     customerId ? getCustomer(customerId) : Promise.resolve(null),
     getAvailableVehicles(),
+    getAppSettings(),
   ]);
 
   return (
@@ -27,6 +29,7 @@ export default async function NewReservationPage(props: PageProps<"/reservations
             initialCustomer={initialCustomer}
             vehicles={vehicles}
             canOverrideBlacklist={canOverrideBlacklist}
+            defaultDeposit={settings.default_security_deposit}
           />
         </CardContent>
       </Card>

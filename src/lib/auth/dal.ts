@@ -35,6 +35,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     .single();
 
   if (!profile) return null;
+  // A deactivated staff account (Settings -> Users & Roles) is treated as
+  // signed out, even though its Supabase Auth session is still technically
+  // valid — this is the only place that check needs to live.
+  if (!(profile as Profile).is_active) return null;
 
   return { id: user.id, email: user.email, profile: profile as Profile };
 });

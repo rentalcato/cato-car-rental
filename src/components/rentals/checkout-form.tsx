@@ -49,10 +49,12 @@ export function CheckoutForm({
   initialCustomer,
   vehicles,
   canOverrideBlacklist,
+  defaultDeposit = 0,
 }: {
   initialCustomer: Customer | null;
   vehicles: AvailableVehicle[];
   canOverrideBlacklist: boolean;
+  defaultDeposit?: number;
 }) {
   const [state, formAction, pending] = useActionState(checkoutRental, initialState);
   const errors = state.fieldErrors ?? {};
@@ -227,7 +229,7 @@ export function CheckoutForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="deposit_amount">Deposit</Label>
-            <Input id="deposit_amount" name="deposit_amount" type="number" min={0} step="0.01" defaultValue={0} />
+            <Input id="deposit_amount" name="deposit_amount" type="number" min={0} step="0.01" defaultValue={defaultDeposit} />
             <FieldError errors={errors.deposit_amount} />
           </div>
           <div className="space-y-2">

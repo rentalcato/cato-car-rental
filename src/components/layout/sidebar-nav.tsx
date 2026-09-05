@@ -10,9 +10,13 @@ import { cn } from "@/lib/utils";
 export function SidebarNav({
   role,
   onNavigate,
+  businessName,
+  logoUrl,
 }: {
   role: Role;
   onNavigate?: () => void;
+  businessName?: string | null;
+  logoUrl?: string | null;
 }) {
   const pathname = usePathname();
   const items = NAV_ITEMS.filter((item) => canAccess(role, item.roles));
@@ -20,8 +24,13 @@ export function SidebarNav({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 py-4 text-lg font-semibold">
-        <Car className="size-6" />
-        Fleet Manager
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="" className="size-6 shrink-0 object-contain" />
+        ) : (
+          <Car className="size-6 shrink-0" />
+        )}
+        <span className="truncate">{businessName || "Fleet Manager"}</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-2">
         {items.map((item) => {

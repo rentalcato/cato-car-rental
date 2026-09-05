@@ -34,10 +34,14 @@ export function Topbar({
   displayName,
   email,
   role,
+  businessName,
+  logoUrl,
 }: {
   displayName: string;
   email: string | undefined;
   role: Role;
+  businessName?: string | null;
+  logoUrl?: string | null;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -55,7 +59,12 @@ export function Topbar({
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
-            <SidebarNav role={role} onNavigate={() => setMobileNavOpen(false)} />
+            <SidebarNav
+              role={role}
+              onNavigate={() => setMobileNavOpen(false)}
+              businessName={businessName}
+              logoUrl={logoUrl}
+            />
           </SheetContent>
         </Sheet>
       </div>
