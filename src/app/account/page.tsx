@@ -152,13 +152,22 @@ export default async function AccountPage() {
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
                 Once we connect your account to your customer record, this page fills in with
                 your real bookings and balance. In the meantime, get in touch and we&apos;ll set
-                it up —
-                {business?.phone ? ` call ${business.phone}` : ""}
-                {business?.phone && business?.email ? " or" : ""}
+                it up
+                {business?.phone ? (
+                  <>
+                    {" "}
+                    — call{" "}
+                    <a href={`tel:${business.phone}`} className="font-medium underline underline-offset-2">
+                      {business.phone}
+                    </a>
+                  </>
+                ) : (
+                  ""
+                )}
+                {business?.phone && business?.email ? " or email" : business?.email ? " — email" : ""}
                 {business?.email ? (
                   <>
                     {" "}
-                    email{" "}
                     <a href={`mailto:${business.email}`} className="font-medium underline underline-offset-2">
                       {business.email}
                     </a>
@@ -166,12 +175,18 @@ export default async function AccountPage() {
                 ) : (
                   ""
                 )}
-                {!business?.phone && !business?.email ? " contact us." : "."}
+                .
               </p>
-              <Button className="mt-4" render={<Link href="/account/fleet" />}>
-                <Car className="size-4" />
-                Browse the fleet meanwhile
-              </Button>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button render={<Link href="/#contact" />}>
+                  <MapPin className="size-4" />
+                  Contact Us
+                </Button>
+                <Button variant="outline" render={<Link href="/account/fleet" />}>
+                  <Car className="size-4" />
+                  Browse the fleet meanwhile
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
