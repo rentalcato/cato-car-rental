@@ -24,7 +24,13 @@ const NAV_LINKS = [
  * (SidebarNav/Topbar): everything collapses into one mobile Sheet menu
  * below lg, and expands into the full three-zone bar at lg+.
  */
-export function MarketingNav({ businessName }: { businessName: string }) {
+export function MarketingNav({
+  businessName,
+  logoUrl,
+}: {
+  businessName: string;
+  logoUrl?: string | null;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -40,13 +46,22 @@ export function MarketingNav({ businessName }: { businessName: string }) {
           </Button>
         </div>
 
-        {/* Brand — centered at lg+, left-aligned on mobile */}
+        {/* Brand — centered at lg+, left-aligned on mobile. The uploaded
+            logo is a full wordmark lockup, so it replaces the text
+            entirely rather than sitting beside a redundant repeat of it. */}
         <Link
           href="#top"
           className="flex items-center gap-2 text-lg font-semibold lg:absolute lg:left-1/2 lg:-translate-x-1/2"
         >
-          <Car className="size-6" />
-          {businessName}
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={businessName} className="h-9 w-auto shrink-0 object-contain" />
+          ) : (
+            <>
+              <Car className="size-6" />
+              {businessName}
+            </>
+          )}
         </Link>
 
         {/* Nav links, right-aligned at lg+ */}

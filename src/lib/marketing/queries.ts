@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { LOGO_BUCKET } from "@/lib/settings/queries";
 import type { PublicBusinessInfo, PublicVehicleListing } from "@/types/database.types";
 
 const VEHICLE_PHOTO_BUCKET = "vehicle-photos";
@@ -171,4 +172,11 @@ export async function getPublicBusinessInfo(): Promise<PublicBusinessInfo | null
   const { data, error } = await supabase.from("public_business_info").select("*").maybeSingle();
   if (error) throw error;
   return data as PublicBusinessInfo | null;
+}
+
+/** business-assets is a public bucket (same one Settings' logo uploader writes to) — safe to resolve anonymously. */
+export async function getPublicBusinessLogoUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const supabase = await createClient();
+  return supabase.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl;
 }

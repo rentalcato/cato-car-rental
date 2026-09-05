@@ -2,7 +2,13 @@ import Link from "next/link";
 import { Car, Mail, MapPin, Phone } from "lucide-react";
 import type { PublicBusinessInfo } from "@/types/database.types";
 
-export function SiteFooter({ business }: { business: PublicBusinessInfo | null }) {
+export function SiteFooter({
+  business,
+  logoUrl,
+}: {
+  business: PublicBusinessInfo | null;
+  logoUrl?: string | null;
+}) {
   const businessName = business?.business_name || "Fleet Manager";
   const year = new Date().getFullYear();
 
@@ -12,8 +18,15 @@ export function SiteFooter({ business }: { business: PublicBusinessInfo | null }
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2 text-lg font-semibold">
-              <Car className="size-5" />
-              {businessName}
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={businessName} className="h-8 w-auto shrink-0 object-contain" />
+              ) : (
+                <>
+                  <Car className="size-5" />
+                  {businessName}
+                </>
+              )}
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               Reliable, comfortable and premium vehicles for every journey.
