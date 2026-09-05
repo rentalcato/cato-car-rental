@@ -34,7 +34,13 @@ cp .env.local.example .env.local
 ```
 
 Fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` with
-the values from step 1.
+the values from step 1. Also fill in `SUPABASE_SERVICE_ROLE_KEY` (Project
+Settings → API → **service_role secret**, not the anon key) — public sign-up
+(`/signup`) needs it to create accounts as already-confirmed via the admin
+API (see "Public site" below); nothing else in the app uses it. **Never**
+prefix it with `NEXT_PUBLIC_` or import it into client code — it bypasses
+RLS entirely. On Vercel, add it under Project Settings → Environment
+Variables the same way as the other two.
 
 ## 3. Run the database migrations
 
@@ -259,7 +265,12 @@ read-only views rather than loosening any RLS policy on
 `customer` role this also introduces). "Browse Vehicles"/"Reserve a
 Vehicle" scroll to the fleet section — no fake public booking flow.
 `/login` and `/signup` are real, unauthenticated pages; every dashboard
-route is exactly as protected as before. A Super Admin controls which
+route is exactly as protected as before. `/signup` creates accounts via
+the Supabase Auth **admin API** (`SUPABASE_SERVICE_ROLE_KEY`, see step 2)
+with `email_confirm: true`, rather than the regular anon `signUp()` call —
+so a new account is usable immediately, independent of the project's
+"Confirm email" setting and its rate-limited default email sender. A
+Super Admin controls which
 vehicles show in the fleet section, and their order, from Settings →
 Website (0013) — a vehicle also needs to be `available` for it to
 actually appear; new vehicles default to shown so nothing changes until
