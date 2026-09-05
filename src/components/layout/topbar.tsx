@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -83,19 +84,21 @@ export function Topbar({
           </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium">{displayName}</span>
-              {email ? (
-                <span className="truncate text-xs text-muted-foreground">
-                  {email}
-                </span>
-              ) : null}
-              <Badge variant="secondary" className="w-fit">
-                {ROLE_LABELS[role]}
-              </Badge>
-            </div>
-          </DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">{displayName}</span>
+                {email ? (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {email}
+                  </span>
+                ) : null}
+                <Badge variant="secondary" className="w-fit">
+                  {ROLE_LABELS[role]}
+                </Badge>
+              </div>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => signOut()}>
             <LogOut className="size-4" />
