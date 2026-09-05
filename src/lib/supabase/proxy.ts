@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // "/" only ever matches its exact-path branch below (the sub-path check
 // becomes pathname.startsWith("//"), which no real path ever satisfies) —
 // it marks the public landing page itself as public, not everything.
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/unauthorized", "/auth/callback"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/unauthorized", "/auth/callback", "/fleet"];
 
 /**
  * Called from src/proxy.ts on every request. Refreshes the Supabase auth

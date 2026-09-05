@@ -83,8 +83,26 @@ export const FALLBACK_VEHICLES: FleetCard[] = [
 export const HERO_IMAGE_URL =
   "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?w=2400&q=80&auto=format&fit=crop";
 
-function assignFallbackImage(index: number): string {
-  return FALLBACK_VEHICLES[index % FALLBACK_VEHICLES.length]!.imageUrl;
+/** Hashes on the vehicle's own id (not list position) so a given vehicle always gets the same stand-in photo, on the homepage card and its detail page alike. */
+function assignFallbackImage(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return FALLBACK_VEHICLES[hash % FALLBACK_VEHICLES.length]!.imageUrl;
+}
+
+function toFleetCard(v: PublicVehicleListing, storagePublicUrl: (path: string) => string): FleetCard {
+  return {
+    id: v.id,
+    make: v.make || "Vehicle",
+    model: v.model || "",
+    year: v.year,
+    category: v.fuel_type === "electric" ? "Electric" : "Sedan / SUV",
+    seats: 5,
+    transmission: "Automatic",
+    dailyRate: v.daily_rental_rate,
+    imageUrl: v.photo_storage_path ? storagePublicUrl(v.photo_storage_path) : assignFallbackImage(v.id),
+    isDemo: false,
+  };
 }
 
 /** Anonymous-readable — reads the public_vehicle_listings view (0012), not the RLS-locked vehicles table. */
@@ -104,20 +122,47 @@ export async function getFleetShowcase(): Promise<FleetCard[]> {
     return FALLBACK_VEHICLES;
   }
 
-  return listings.map((v, index) => ({
-    id: v.id,
-    make: v.make || "Vehicle",
-    model: v.model || "",
-    year: v.year,
-    category: v.fuel_type === "electric" ? "Electric" : "Sedan / SUV",
-    seats: 5,
-    transmission: "Automatic",
-    dailyRate: v.daily_rental_rate,
-    imageUrl: v.photo_storage_path
-      ? supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(v.photo_storage_path).data.publicUrl
-      : assignFallbackImage(index),
-    isDemo: false,
-  }));
+  return listings.map((v) =>
+    toFleetCard(
+      v,
+      (path) => supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl
+    )
+  );
+}
+
+/**
+ * A single real vehicle's public detail page data. Reads the same
+ * anon-readable public_vehicle_listings view as getFleetShowcase() — never
+ * the RLS-locked vehicles table — so it can only ever return what's
+ * currently featured, available and non-archived (see 0012/0013).
+ * Returns null if the id doesn't match any such row (bad id, or the
+ * vehicle since got rented/archived/unfeatured).
+ */
+export async function getVehicleListingById(
+  id: string
+): Promise<(FleetCard & { colour: string | null }) | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("public_vehicle_listings")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    // 22P02 = invalid input syntax for uuid — a malformed id in the URL,
+    // not a real backend failure. Treat it the same as "no such vehicle"
+    // instead of surfacing a 500 for what's really a bad/stale link.
+    if (error.code === "22P02") return null;
+    throw error;
+  }
+  if (!data) return null;
+
+  const listing = data as PublicVehicleListing;
+  const card = toFleetCard(
+    listing,
+    (path) => supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl
+  );
+  return { ...card, colour: listing.colour };
 }
 
 /** Anonymous-readable — reads the public_business_info view (0012). */

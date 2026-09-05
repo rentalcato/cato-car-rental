@@ -265,6 +265,19 @@ Website (0013) — a vehicle also needs to be `available` for it to
 actually appear; new vehicles default to shown so nothing changes until
 someone opts one out.
 
+Each fleet card is a real link to a public detail page (`/fleet/[id]`,
+also unauthenticated) showing that vehicle's public-safe info from the
+same view — no license plate/VIN/mileage, that's still internal-only.
+Its "Reserve This Vehicle" button goes to `/login`, matching "no fake
+public booking flow." Demo/fallback cards (shown when there's no real,
+featured, available inventory yet) aren't real vehicles, so they link
+to the contact section instead. `next.config.ts`'s `images.remotePatterns`
+allow-lists both `images.unsplash.com` (stock fallback photos) and your
+Supabase project's own storage hostname, derived from
+`NEXT_PUBLIC_SUPABASE_URL` at build time — a real vehicle photo is a
+Supabase Storage URL, and `next/image` hard-errors on any host that
+isn't explicitly allowed.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
 editing/deleting a maintenance or issue record once logged, a real

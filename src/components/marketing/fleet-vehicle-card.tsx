@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { Users, Cog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -5,8 +6,13 @@ import { formatCurrency } from "@/lib/format";
 import type { FleetCard } from "@/lib/marketing/queries";
 
 export function FleetVehicleCard({ vehicle }: { vehicle: FleetCard }) {
+  const href = vehicle.isDemo ? "#contact" : `/fleet/${vehicle.id}`;
+
   return (
-    <div className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md">
+    <Link
+      href={href}
+      className="group block overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+    >
       <div className="relative aspect-4/3 overflow-hidden bg-muted">
         <Image
           src={vehicle.imageUrl}
@@ -51,15 +57,11 @@ export function FleetVehicleCard({ vehicle }: { vehicle: FleetCard }) {
               <span className="text-sm text-muted-foreground">Price on request</span>
             )}
           </div>
-          <a
-            href={vehicle.isDemo ? "#contact" : `/vehicles/${vehicle.id}`}
-            className="text-sm font-medium text-primary hover:underline"
-            title={vehicle.isDemo ? "Contact us about this vehicle" : "View this vehicle (staff sign-in required)"}
-          >
-            {vehicle.isDemo ? "Enquire" : "View Vehicle"}
-          </a>
+          <span className="text-sm font-medium text-primary group-hover:underline">
+            {vehicle.isDemo ? "Enquire" : "View Details"}
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
