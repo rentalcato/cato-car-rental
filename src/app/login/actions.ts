@@ -23,6 +23,15 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // Surface this specific case rather than masking it as bad credentials
+    // — it means the password is right but Supabase is still waiting on
+    // email confirmation (see README's "Confirm email" note).
+    if (error.code === "email_not_confirmed") {
+      return {
+        error:
+          "This account's email hasn't been confirmed yet. Check your inbox (and spam folder), or ask an admin to confirm it for you.",
+      };
+    }
     return { error: "Invalid email or password." };
   }
 
