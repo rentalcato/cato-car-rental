@@ -84,6 +84,14 @@ move to the next one):
     `select` policies so a signed-in customer can read only their own
     linked customer/rental/vehicle rows — see "Customer account area"
     below
+15. `0015_customer_self_booking.sql` — lets a linked customer call
+    `create_reservation`/`cancel_reservation` for their own record, and
+    fixes a real gap those RPCs had: they were `SECURITY DEFINER`
+    functions grantable to any `authenticated` user with no check that
+    the caller had any right to the `customer_id`/`rental_id` passed
+    in. Harmless while only staff had accounts; not harmless once
+    public sign-up existed. **Apply this one even if you don't care
+    about self-service booking.**
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -307,9 +315,20 @@ message with the business's contact info instead of any booking data.
 link (e.g. bounced off a specific protected page) is still honored as
 typed.
 
+A **linked** customer can also self-book (0015): **Browse Fleet** in
+the `/account` header shows the same bookable catalog as the public
+homepage (`public_vehicle_listings`, no 8-car cap, no demo fallback),
+opening a vehicle shows real details plus a booking form, and
+submitting it calls the same `create_reservation()` RPC staff use —
+it's a real reservation, not a "request" awaiting approval. A linked
+customer can also cancel their own pending reservation from
+`/account`. An **unlinked** customer can still browse, but the vehicle
+page shows a "get connected first" message instead of a booking form.
+Checking a reservation in (handing over the actual vehicle) stays
+staff-only — that's an in-person, ID-verifying action, not something
+exposed over the web.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
-editing/deleting a maintenance or issue record once logged, a customer
-editing their own profile, and self-service booking (a customer
-requesting a reservation themselves — today only staff create
-rentals/reservations, even for a linked customer).
+editing/deleting a maintenance or issue record once logged, and a
+customer editing their own profile.

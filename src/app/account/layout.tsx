@@ -31,12 +31,23 @@ export default async function AccountLayout({ children }: { children: ReactNode 
               </>
             )}
           </Link>
-          <form action={signOut}>
-            <Button variant="outline" size="sm" type="submit">
-              <LogOut className="size-3.5" />
-              Sign out
-            </Button>
-          </form>
+          <nav className="flex items-center gap-4">
+            <Link href="/account" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+              My Account
+            </Link>
+            <Link
+              href="/account/fleet"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Browse Fleet
+            </Link>
+            <form action={signOut}>
+              <Button variant="outline" size="sm" type="submit">
+                <LogOut className="size-3.5" />
+                Sign out
+              </Button>
+            </form>
+          </nav>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">{children}</main>

@@ -132,6 +132,32 @@ export async function getFleetShowcase(): Promise<FleetCard[]> {
 }
 
 /**
+ * The full bookable catalog for a signed-in customer's "Browse Fleet"
+ * screen (src/app/account/fleet) — same view as getFleetShowcase(), but
+ * no .limit(8) (that cap is a homepage-hero concern, not a real
+ * catalog) and no demo-fallback (an authenticated booking screen says
+ * "nothing available" plainly, never shows fake cars to book).
+ */
+export async function getBookableVehicles(): Promise<FleetCard[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("public_vehicle_listings")
+    .select("*")
+    .order("website_display_order", { ascending: true })
+    .order("daily_rental_rate", { ascending: true });
+
+  if (error) throw error;
+  const listings = (data ?? []) as PublicVehicleListing[];
+
+  return listings.map((v) =>
+    toFleetCard(
+      v,
+      (path) => supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl
+    )
+  );
+}
+
+/**
  * A single real vehicle's public detail page data. Reads the same
  * anon-readable public_vehicle_listings view as getFleetShowcase() — never
  * the RLS-locked vehicles table — so it can only ever return what's

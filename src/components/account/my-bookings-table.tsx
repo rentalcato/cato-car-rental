@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import {
   Table,
   TableBody,
@@ -6,9 +9,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { cancelMyReservation } from "@/lib/account/actions";
 import type { MyBookingRow } from "@/lib/account/queries";
+
+function CancelBookingButton({ rentalId }: { rentalId: string }) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleCancel() {
+    if (!window.confirm("Cancel this reservation?")) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await cancelMyReservation(rentalId);
+      if (result.error) setError(result.error);
+    });
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button variant="outline" size="sm" disabled={isPending} onClick={handleCancel}>
+        {isPending ? "Cancelling…" : "Cancel"}
+      </Button>
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+    </div>
+  );
+}
 
 export function MyBookingsTable({ bookings }: { bookings: MyBookingRow[] }) {
   if (bookings.length === 0) {
@@ -28,6 +56,7 @@ export function MyBookingsTable({ bookings }: { bookings: MyBookingRow[] }) {
             <TableHead>Expected Return</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Balance Due</TableHead>
+            <TableHead className="w-1" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,6 +75,11 @@ export function MyBookingsTable({ bookings }: { bookings: MyBookingRow[] }) {
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {formatCurrency(booking.balance_due)}
+              </TableCell>
+              <TableCell>
+                {booking.rental_status === "reserved" ? (
+                  <CancelBookingButton rentalId={booking.id} />
+                ) : null}
               </TableCell>
             </TableRow>
           ))}

@@ -55,7 +55,12 @@ export default async function AccountPage() {
           </Card>
 
           <div>
-            <h2 className="mb-2 text-lg font-semibold">Your Bookings</h2>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">Your Bookings</h2>
+              <Link href="/account/fleet" className="text-sm font-medium text-primary hover:underline">
+                Book another vehicle →
+              </Link>
+            </div>
             <MyBookingsTable bookings={bookings} />
           </div>
         </>
@@ -82,7 +87,7 @@ export default async function AccountPage() {
               {!business?.phone && !business?.email ? " contact us." : "."}
             </p>
             <Link
-              href="/#fleet"
+              href="/account/fleet"
               className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
             >
               Browse our fleet →
