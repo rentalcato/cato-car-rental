@@ -354,6 +354,19 @@ export type Database = {
         },
         string
       >;
+      /** SECURITY DEFINER — see supabase/migrations/0018_customer_self_service.sql */
+      update_my_profile: Fn<{ p_full_name: string }, void>;
+      update_my_contact_info: Fn<
+        {
+          p_primary_phone?: string | null;
+          p_secondary_phone?: string | null;
+          p_address?: string | null;
+          p_city_parish?: string | null;
+          p_emergency_contact_name?: string | null;
+          p_emergency_contact_phone?: string | null;
+        },
+        void
+      >;
     };
   };
 };

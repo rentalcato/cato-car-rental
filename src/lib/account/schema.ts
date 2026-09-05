@@ -25,6 +25,24 @@ export const bookingFormSchema = z.object({
 
 export type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
+export const profileFormSchema = z.object({
+  full_name: z.string().trim().min(1, { error: "Name can't be empty." }).max(120),
+});
+
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+/** Only fields update_my_contact_info() (0018) accepts — never license/ID/status/notes. */
+export const contactFormSchema = z.object({
+  primary_phone: z.preprocess(emptyToUndefined, z.string().trim().max(30).optional()),
+  secondary_phone: z.preprocess(emptyToUndefined, z.string().trim().max(30).optional()),
+  address: z.preprocess(emptyToUndefined, z.string().trim().max(300).optional()),
+  city_parish: z.preprocess(emptyToUndefined, z.string().trim().max(100).optional()),
+  emergency_contact_name: z.preprocess(emptyToUndefined, z.string().trim().max(120).optional()),
+  emergency_contact_phone: z.preprocess(emptyToUndefined, z.string().trim().max(30).optional()),
+});
+
+export type ContactFormValues = z.infer<typeof contactFormSchema>;
+
 export function fieldErrors(error: z.ZodError): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const issue of error.issues) {

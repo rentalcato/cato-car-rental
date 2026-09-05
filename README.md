@@ -100,6 +100,15 @@ move to the next one):
     `body_type` (all optional) and two new enums
     (`transmission_type`, `body_type`), and updates
     `public_vehicle_listings` to expose all three.
+18. `0018_customer_self_service.sql` — an additive select policy so a
+    linked customer can read their own payment history, plus two
+    narrow `SECURITY DEFINER` functions (`update_my_profile`,
+    `update_my_contact_info`) letting any customer edit their own name
+    and, once linked, their own contact details — deliberately not an
+    RLS write policy, since a policy can't limit which *columns* get
+    written and `profiles`/`customers` both carry fields (role,
+    is_active, status, license/ID) a customer must never touch
+    themselves.
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -366,7 +375,16 @@ exposed over the web. Browse Fleet has a search box (make/model only —
 this catalog never carries the license plate) for finding a specific
 vehicle in a larger fleet.
 
+`/account` also has an **Edit** button (0018): any customer can change
+their own name; once linked, the same dialog also edits their contact
+details (phone, address, city/parish, emergency contact) — never the
+sensitive fields (license/ID/status/notes), which stay staff-only from
+the Customers screen. A linked customer's Payment History (amounts,
+dates, methods) shows below their bookings, reusing the same table
+component the staff-side customer profile uses.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
 editing/deleting a maintenance or issue record once logged, and a
-customer editing their own profile.
+customer uploading their own ID/license documents (still staff-only,
+from the Customers screen).

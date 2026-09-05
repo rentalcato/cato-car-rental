@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
 import { MyBookingsTable } from "@/components/account/my-bookings-table";
-import { getMyAccount, getMyBookings } from "@/lib/account/queries";
+import { EditDetailsDialog } from "@/components/account/edit-details-dialog";
+import { CustomerPaymentHistoryTable } from "@/components/customers/customer-payment-history-table";
+import { getMyAccount, getMyBookings, getMyPayments } from "@/lib/account/queries";
 import { getPublicBusinessInfo } from "@/lib/marketing/queries";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -52,7 +54,10 @@ export default async function AccountPage() {
   if (!account) return null;
 
   const { profile, customer } = account;
-  const bookings = await getMyBookings(customer?.id);
+  const [bookings, payments] = await Promise.all([
+    getMyBookings(customer?.id),
+    getMyPayments(customer?.id),
+  ]);
 
   const firstName = (profile.full_name || "there").trim().split(/\s+/)[0];
   const currentTrip = bookings.find(
@@ -119,7 +124,20 @@ export default async function AccountPage() {
 
           <Card>
             <CardContent className="pt-6">
-              <p className="mb-3 text-sm font-semibold">Your Details</p>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Your Details</p>
+                <EditDetailsDialog
+                  fullName={profile.full_name}
+                  contact={{
+                    primaryPhone: customer.primary_phone,
+                    secondaryPhone: customer.secondary_phone,
+                    address: customer.address,
+                    cityParish: customer.city_parish,
+                    emergencyContactName: customer.emergency_contact_name,
+                    emergencyContactPhone: customer.emergency_contact_phone,
+                  }}
+                />
+              </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <DetailItem label="Name" value={profile.full_name} />
                 <DetailItem label="Email" value={profile.email} />
@@ -138,6 +156,11 @@ export default async function AccountPage() {
               </Link>
             </div>
             <MyBookingsTable bookings={bookings} />
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-lg font-semibold">Payment History</h2>
+            <CustomerPaymentHistoryTable payments={payments} />
           </div>
         </>
       ) : (
@@ -192,7 +215,10 @@ export default async function AccountPage() {
 
           <Card>
             <CardContent className="pt-6">
-              <p className="mb-3 text-sm font-semibold">Profile</p>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Profile</p>
+                <EditDetailsDialog fullName={profile.full_name} />
+              </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <DetailItem label="Name" value={profile.full_name} />
                 <DetailItem label="Email" value={profile.email} />

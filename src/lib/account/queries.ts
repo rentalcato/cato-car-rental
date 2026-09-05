@@ -2,7 +2,7 @@ import "server-only";
 
 import { getCurrentUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
-import type { Customer, Profile, Rental, Vehicle } from "@/types/database.types";
+import type { Customer, Payment, Profile, Rental, Vehicle } from "@/types/database.types";
 
 export interface MyAccount {
   profile: Profile;
@@ -46,4 +46,19 @@ export async function getMyBookings(customerId: string | undefined): Promise<MyB
 
   if (error) throw error;
   return (data ?? []) as unknown as MyBookingRow[];
+}
+
+/** Empty if the account isn't linked to a customers record yet — reads via payments_select_own (0018). */
+export async function getMyPayments(customerId: string | undefined): Promise<Payment[]> {
+  if (!customerId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("customer_id", customerId)
+    .order("payment_date", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as Payment[];
 }
