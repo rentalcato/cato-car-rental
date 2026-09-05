@@ -23,14 +23,14 @@ select
   v.colour,
   v.daily_rental_rate,
   v.fuel_type,
-  v.website_display_order,
   (
     select vp.storage_path
     from public.vehicle_photos vp
     where vp.vehicle_id = v.id
     order by vp.created_at asc
     limit 1
-  ) as photo_storage_path
+  ) as photo_storage_path,
+  v.website_display_order
 from public.vehicles v
 where v.vehicle_status = 'available'
   and v.archived_at is null
