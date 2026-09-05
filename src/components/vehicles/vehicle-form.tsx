@@ -1,0 +1,192 @@
+"use client";
+
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FUEL_TYPES, VEHICLE_STATUSES } from "@/lib/constants";
+import { VEHICLE_STATUS_CONFIG } from "@/components/vehicles/status-badge";
+import type { VehicleActionState } from "@/lib/vehicles/actions";
+import type { Vehicle } from "@/types/database.types";
+
+const FUEL_TYPE_LABELS: Record<(typeof FUEL_TYPES)[number], string> = {
+  gasoline: "Gasoline",
+  diesel: "Diesel",
+  hybrid: "Hybrid",
+  electric: "Electric",
+  other: "Other",
+};
+
+const initialState: VehicleActionState = {};
+
+function FieldError({ errors }: { errors?: string[] }) {
+  if (!errors?.length) return null;
+  return (
+    <p role="alert" className="text-sm text-destructive">
+      {errors[0]}
+    </p>
+  );
+}
+
+export function VehicleForm({
+  action,
+  defaultValues,
+  submitLabel,
+}: {
+  action: (prevState: VehicleActionState, formData: FormData) => Promise<VehicleActionState>;
+  defaultValues?: Partial<Vehicle>;
+  submitLabel: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, initialState);
+  const errors = state.fieldErrors ?? {};
+
+  return (
+    <form action={formAction} className="space-y-6" noValidate>
+      {state.error ? (
+        <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          {state.error}
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="license_plate">License plate *</Label>
+          <Input
+            id="license_plate"
+            name="license_plate"
+            defaultValue={defaultValues?.license_plate}
+            required
+            maxLength={20}
+            placeholder="e.g. AB 1234"
+          />
+          <FieldError errors={errors.license_plate} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="vin">VIN / chassis number</Label>
+          <Input id="vin" name="vin" defaultValue={defaultValues?.vin ?? ""} maxLength={32} />
+          <FieldError errors={errors.vin} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="make">Make</Label>
+          <Input id="make" name="make" defaultValue={defaultValues?.make ?? ""} />
+          <FieldError errors={errors.make} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="model">Model</Label>
+          <Input id="model" name="model" defaultValue={defaultValues?.model ?? ""} />
+          <FieldError errors={errors.model} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="year">Year</Label>
+          <Input
+            id="year"
+            name="year"
+            type="number"
+            inputMode="numeric"
+            defaultValue={defaultValues?.year ?? ""}
+          />
+          <FieldError errors={errors.year} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="colour">Colour</Label>
+          <Input id="colour" name="colour" defaultValue={defaultValues?.colour ?? ""} />
+          <FieldError errors={errors.colour} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="daily_rental_rate">Daily rental rate (JMD) *</Label>
+          <Input
+            id="daily_rental_rate"
+            name="daily_rental_rate"
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            required
+            defaultValue={defaultValues?.daily_rental_rate ?? ""}
+          />
+          <FieldError errors={errors.daily_rental_rate} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="current_mileage">Current mileage</Label>
+          <Input
+            id="current_mileage"
+            name="current_mileage"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            defaultValue={defaultValues?.current_mileage ?? ""}
+          />
+          <FieldError errors={errors.current_mileage} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="fuel_type">Fuel type</Label>
+          <Select name="fuel_type" defaultValue={defaultValues?.fuel_type ?? undefined}>
+            <SelectTrigger id="fuel_type" className="w-full">
+              <SelectValue placeholder="Select fuel type" />
+            </SelectTrigger>
+            <SelectContent>
+              {FUEL_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {FUEL_TYPE_LABELS[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError errors={errors.fuel_type} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="vehicle_status">Status *</Label>
+          <Select
+            name="vehicle_status"
+            defaultValue={defaultValues?.vehicle_status ?? "available"}
+          >
+            <SelectTrigger id="vehicle_status" className="w-full">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {VEHICLE_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {VEHICLE_STATUS_CONFIG[status].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError errors={errors.vehicle_status} />
+          <p className="text-xs text-muted-foreground">
+            Rented / Reserved / Overdue will be set automatically by the rental system in a
+            later phase — for now they can be set here for testing.
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea id="notes" name="notes" rows={4} defaultValue={defaultValues?.notes ?? ""} />
+        <FieldError errors={errors.notes} />
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+}
