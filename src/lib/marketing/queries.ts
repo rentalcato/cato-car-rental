@@ -116,15 +116,21 @@ function toFleetCard(v: PublicVehicleListing, storagePublicUrl: (path: string) =
   };
 }
 
-/** Anonymous-readable — reads the public_vehicle_listings view (0012), not the RLS-locked vehicles table. */
+/**
+ * Anonymous-readable — reads the public_vehicle_listings view (0012), not
+ * the RLS-locked vehicles table. No cap: an admin already controls what's
+ * in this pool at all via Settings -> Website (is_featured, 0013), and
+ * capping further on top of that would fight the homepage's own search
+ * box — a vehicle the search box can't find because it got cut for being
+ * 9th-by-price would look like a bug, not a feature.
+ */
 export async function getFleetShowcase(): Promise<FleetCard[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("public_vehicle_listings")
     .select("*")
     .order("website_display_order", { ascending: true })
-    .order("daily_rental_rate", { ascending: true })
-    .limit(8);
+    .order("daily_rental_rate", { ascending: true });
 
   if (error) throw error;
   const listings = (data ?? []) as PublicVehicleListing[];

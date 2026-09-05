@@ -320,7 +320,12 @@ Website (0013) — a vehicle also needs to be `available` for it to
 actually appear; new vehicles default to shown so nothing changes until
 someone opts one out.
 
-Each fleet card is a real link to a public detail page (`/fleet/[id]`,
+The fleet section has a search box (client-side, filters by make/model/
+category on the already-loaded list — no page reload) so a visitor can
+find a specific vehicle rather than scan the whole grid; this section
+is no longer capped at a fixed count, since a cap would fight the
+search box (a vehicle the box can't find because it was cut off would
+look broken, not intentional). Each fleet card is a real link to a public detail page (`/fleet/[id]`,
 also unauthenticated) showing that vehicle's public-safe info from the
 same view — no license plate/VIN/mileage, that's still internal-only.
 Its "Reserve This Vehicle" button goes to `/login`, matching "no fake
