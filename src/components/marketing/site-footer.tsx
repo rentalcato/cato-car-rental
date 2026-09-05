@@ -84,8 +84,12 @@ export function SiteFooter({
               <li>
                 <Link href="/signup" className="hover:text-foreground">Sign Up</Link>
               </li>
-              <li className="text-muted-foreground/70">Terms of Service</li>
-              <li className="text-muted-foreground/70">Privacy Policy</li>
+              <li>
+                <Link href="/terms" className="hover:text-foreground">Terms of Service</Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+              </li>
             </ul>
           </div>
         </div>

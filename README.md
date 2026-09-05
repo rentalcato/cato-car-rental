@@ -398,3 +398,17 @@ managing a walk-in customer's documents from the Customers screen.
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
 and editing/deleting a maintenance or issue record once logged.
+
+**Pre-launch hardening**: `src/app/error.tsx`/`global-error.tsx` catch
+any otherwise-uncaught render error with a recoverable page instead of
+the browser's own bare fallback (what a couple of real bugs looked
+like before this existed); `not-found.tsx` gives stray URLs a real 404
+page. `/terms` and `/privacy` are real, linked pages now instead of
+dead footer text — **their content is a placeholder structure only,
+not reviewed legal text**; replace it before relying on it. `robots.ts`/
+`sitemap.ts` keep crawlers off the authenticated app and list the
+public pages (homepage, terms, privacy, each real vehicle's `/fleet/[id]`)
+for search engines — set `NEXT_PUBLIC_SITE_URL` once on a custom domain.
+The homepage's tab title/meta description now reflect the real business
+name via `generateMetadata()`, instead of the static "Fleet Manager"
+default every page otherwise falls back to.
