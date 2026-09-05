@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Car, CalendarClock, MapPin, Wallet, type LucideIcon } from "lucide-react";
+import { Car, CalendarClock, MapPin, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
@@ -81,19 +81,19 @@ export default async function AccountPage() {
         </Button>
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard icon={CalendarClock} label="Open Bookings" value={String(openBookings.length)} />
+        <StatCard icon={Car} label="Total Bookings" value={String(bookings.length)} />
+        <StatCard
+          icon={Wallet}
+          label="Balance Due"
+          value={formatCurrency(balanceDue)}
+          emphasis={balanceDue > 0}
+        />
+      </div>
+
       {customer ? (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatCard icon={CalendarClock} label="Open Bookings" value={String(openBookings.length)} />
-            <StatCard icon={Car} label="Total Bookings" value={String(bookings.length)} />
-            <StatCard
-              icon={Wallet}
-              label="Balance Due"
-              value={formatCurrency(balanceDue)}
-              emphasis={balanceDue > 0}
-            />
-          </div>
-
           {highlightTrip ? (
             <Card className="border-primary/30 bg-primary/5">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
@@ -142,24 +142,19 @@ export default async function AccountPage() {
         </>
       ) : (
         <>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="mb-3 text-sm font-semibold">Profile</p>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <DetailItem label="Name" value={profile.full_name} />
-                <DetailItem label="Email" value={profile.email} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm font-semibold">No bookings linked yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your account isn&apos;t connected to a customer record yet, so there&apos;s no
-                booking history to show here. Get in touch and we&apos;ll connect it —
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-5">
+              <p className="mb-1 flex items-center gap-2 text-xs font-medium tracking-wide text-primary uppercase">
+                <Sparkles className="size-3.5" />
+                Get set up to book
+              </p>
+              <p className="text-lg font-semibold">Your account isn&apos;t connected yet</p>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Once we connect your account to your customer record, this page fills in with
+                your real bookings and balance. In the meantime, get in touch and we&apos;ll set
+                it up —
                 {business?.phone ? ` call ${business.phone}` : ""}
-                {business?.phone && business?.email ? " or " : ""}
+                {business?.phone && business?.email ? " or" : ""}
                 {business?.email ? (
                   <>
                     {" "}
@@ -173,12 +168,20 @@ export default async function AccountPage() {
                 )}
                 {!business?.phone && !business?.email ? " contact us." : "."}
               </p>
-              <Link
-                href="/account/fleet"
-                className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
-              >
-                Browse our fleet →
-              </Link>
+              <Button className="mt-4" render={<Link href="/account/fleet" />}>
+                <Car className="size-4" />
+                Browse the fleet meanwhile
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <p className="mb-3 text-sm font-semibold">Profile</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <DetailItem label="Name" value={profile.full_name} />
+                <DetailItem label="Email" value={profile.email} />
+              </div>
             </CardContent>
           </Card>
         </>
