@@ -14,6 +14,7 @@ export const VEHICLE_STATUS_CONFIG: Record<VehicleStatus, { label: string; color
   rented: { label: "Rented", color: "#4a3aa7" },
   overdue: { label: "Overdue", color: "#d03b3b" },
   maintenance: { label: "Maintenance", color: "#fab219" },
+  damaged: { label: "Damaged", color: "#b91c1c" },
   out_of_service: { label: "Out of Service", color: "#ec835a" },
 };
 

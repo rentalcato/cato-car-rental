@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Pencil, ShieldAlert, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VehicleStatusBadge } from "@/components/vehicles/status-badge";
 import { DailyRateDialog } from "@/components/vehicles/daily-rate-dialog";
 import { ArchiveVehicleDialog } from "@/components/vehicles/archive-vehicle-dialog";
+import { ReturnToServiceButton } from "@/components/vehicles/return-to-service-button";
 import { PhotoGallery } from "@/components/vehicles/photo-gallery";
 import { CurrentRenterCard } from "@/components/vehicles/current-renter-card";
 import { UpcomingReservationCard } from "@/components/vehicles/upcoming-reservation-card";
@@ -64,8 +65,24 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
         </div>
 
         {canManage ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-start gap-2">
             <DailyRateDialog vehicleId={vehicle.id} currentRate={vehicle.daily_rental_rate} />
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/maintenance/new?vehicleId=${vehicle.id}`} />}
+            >
+              <Wrench className="size-3.5" />
+              Record Maintenance
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/maintenance/report-damage?vehicleId=${vehicle.id}`} />}
+            >
+              <ShieldAlert className="size-3.5" />
+              Report Damage
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -79,6 +96,9 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
               licensePlate={vehicle.license_plate}
               isArchived={Boolean(vehicle.archived_at)}
             />
+            {vehicle.vehicle_status === "maintenance" || vehicle.vehicle_status === "damaged" ? (
+              <ReturnToServiceButton vehicleId={vehicle.id} />
+            ) : null}
           </div>
         ) : null}
       </div>

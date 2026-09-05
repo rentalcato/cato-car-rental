@@ -12,6 +12,7 @@ export const VEHICLE_STATUSES = [
   "rented",
   "overdue",
   "maintenance",
+  "damaged",
   "out_of_service",
 ] as const;
 
@@ -64,3 +65,17 @@ export const DOCUMENT_TYPES = [
 export const ALLOWED_DOCUMENT_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
 
 export const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+export const MAINTENANCE_TYPES = [
+  "oil_service",
+  "tyres",
+  "brakes",
+  "engine",
+  "transmission",
+  "suspension",
+  "electrical",
+  "bodywork",
+  "air_conditioning",
+  "inspection",
+  "other",
+] as const;

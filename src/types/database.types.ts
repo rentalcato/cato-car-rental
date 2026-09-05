@@ -175,6 +175,7 @@ export type VehicleIssue = {
   repair_cost: number | null;
   status: IssueStatus;
   reported_by: string | null;
+  photo_storage_path: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -191,6 +192,7 @@ export type Maintenance = {
   cost: number | null;
   service_provider: string | null;
   notes: string | null;
+  receipt_storage_path: string | null;
   created_at: string;
   updated_at: string;
 };

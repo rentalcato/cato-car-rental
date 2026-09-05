@@ -218,3 +218,27 @@ export async function deleteVehiclePhoto(
   revalidatePath(`/vehicles/${vehicleId}`);
   return {};
 }
+
+/**
+ * Shared "close the loop" action for both Maintenance and Issues — sets a
+ * vehicle back to Available. Kept vehicle-status-owned rather than under
+ * either sub-feature. The protect_vehicle_status_transition trigger (0008)
+ * still applies: this is rejected if the vehicle genuinely has an open
+ * rental/reservation.
+ */
+export async function returnVehicleToService(vehicleId: string): Promise<VehicleMutationResult> {
+  await requireRole(FLEET_MANAGERS);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("vehicles")
+    .update({ vehicle_status: "available" })
+    .eq("id", vehicleId);
+
+  if (error) return { error: dbErrorMessage(error) };
+
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath("/maintenance");
+  return {};
+}
