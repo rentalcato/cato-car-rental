@@ -14,6 +14,21 @@ export interface VehicleActionState {
   error?: string;
   fieldErrors?: Record<string, string[]>;
   success?: boolean;
+  /**
+   * Echoes back whatever was submitted so the form can redisplay it after
+   * a failed attempt — a Server Action round trip re-renders this form
+   * from scratch, so relying on the browser to keep unsaved input would
+   * silently lose it the moment one field fails validation.
+   */
+  values?: Record<string, string>;
+}
+
+/** FormData -> plain string map, for echoing values back on a failed submission. */
+function formValues(formData: FormData): Record<string, string> {
+  return Object.fromEntries(
+    Array.from(formData.entries())
+      .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+  );
 }
 
 /** Postgres unique-violation code, kept in case of a race with the DB constraint. */
@@ -30,9 +45,10 @@ export async function createVehicle(
 ): Promise<VehicleActionState> {
   await requireRole(FLEET_MANAGERS);
 
+  const values = formValues(formData);
   const parsed = vehicleFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { fieldErrors: fieldErrors(parsed.error) };
+    return { fieldErrors: fieldErrors(parsed.error), values };
   }
 
   if (await isLicensePlateTaken(parsed.data.license_plate)) {
@@ -40,6 +56,7 @@ export async function createVehicle(
       fieldErrors: {
         license_plate: ["A vehicle with this license plate already exists."],
       },
+      values,
     };
   }
 
@@ -51,7 +68,7 @@ export async function createVehicle(
     .single();
 
   if (error || !data) {
-    return { error: dbErrorMessage(error ?? { message: "Could not create vehicle." }) };
+    return { error: dbErrorMessage(error ?? { message: "Could not create vehicle." }), values };
   }
 
   revalidatePath("/vehicles");
@@ -65,9 +82,10 @@ export async function updateVehicle(
 ): Promise<VehicleActionState> {
   await requireRole(FLEET_MANAGERS);
 
+  const values = formValues(formData);
   const parsed = vehicleFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { fieldErrors: fieldErrors(parsed.error) };
+    return { fieldErrors: fieldErrors(parsed.error), values };
   }
 
   if (await isLicensePlateTaken(parsed.data.license_plate, vehicleId)) {
@@ -75,6 +93,7 @@ export async function updateVehicle(
       fieldErrors: {
         license_plate: ["Another vehicle already uses this license plate."],
       },
+      values,
     };
   }
 
@@ -85,7 +104,7 @@ export async function updateVehicle(
     .eq("id", vehicleId);
 
   if (error) {
-    return { error: dbErrorMessage(error) };
+    return { error: dbErrorMessage(error), values };
   }
 
   revalidatePath("/vehicles");

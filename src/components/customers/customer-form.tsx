@@ -56,6 +56,15 @@ export function CustomerForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
+  // Whatever was just submitted (and rejected) wins over the original
+  // defaultValues, so a failed attempt redisplays what you typed instead
+  // of resetting the form.
+  const values = state.values;
+  function field(name: keyof Customer): string {
+    if (values?.[name] !== undefined) return values[name];
+    const dv = defaultValues?.[name];
+    return dv === null || dv === undefined ? "" : String(dv);
+  }
 
   return (
     <form action={formAction} className="space-y-8" noValidate>
@@ -74,19 +83,19 @@ export function CustomerForm({
             <Input
               id="first_name"
               name="first_name"
-              defaultValue={defaultValues?.first_name}
+              defaultValue={field("first_name")}
               required
               maxLength={60}
             />
           </Field>
           <Field id="middle_name" label="Middle name" errors={errors.middle_name}>
-            <Input id="middle_name" name="middle_name" defaultValue={defaultValues?.middle_name ?? ""} />
+            <Input id="middle_name" name="middle_name" defaultValue={field("middle_name")} />
           </Field>
           <Field id="last_name" label="Last name" required errors={errors.last_name}>
             <Input
               id="last_name"
               name="last_name"
-              defaultValue={defaultValues?.last_name}
+              defaultValue={field("last_name")}
               required
               maxLength={60}
             />
@@ -96,11 +105,11 @@ export function CustomerForm({
               id="date_of_birth"
               name="date_of_birth"
               type="date"
-              defaultValue={defaultValues?.date_of_birth ?? ""}
+              defaultValue={field("date_of_birth")}
             />
           </Field>
           <Field id="gender" label="Gender" errors={errors.gender}>
-            <Input id="gender" name="gender" defaultValue={defaultValues?.gender ?? ""} maxLength={30} />
+            <Input id="gender" name="gender" defaultValue={field("gender")} maxLength={30} />
           </Field>
         </div>
       </section>
@@ -109,13 +118,13 @@ export function CustomerForm({
         <h3 className="text-sm font-semibold">Contact Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Field id="email" label="Email" errors={errors.email}>
-            <Input id="email" name="email" type="email" defaultValue={defaultValues?.email ?? ""} maxLength={255} />
+            <Input id="email" name="email" type="email" defaultValue={field("email")} maxLength={255} />
           </Field>
           <Field id="primary_phone" label="Primary phone" required errors={errors.primary_phone}>
             <Input
               id="primary_phone"
               name="primary_phone"
-              defaultValue={defaultValues?.primary_phone ?? ""}
+              defaultValue={field("primary_phone")}
               required
               maxLength={30}
             />
@@ -124,24 +133,24 @@ export function CustomerForm({
             <Input
               id="secondary_phone"
               name="secondary_phone"
-              defaultValue={defaultValues?.secondary_phone ?? ""}
+              defaultValue={field("secondary_phone")}
               maxLength={30}
             />
           </Field>
           <Field id="address" label="Home address" errors={errors.address}>
-            <Input id="address" name="address" defaultValue={defaultValues?.address ?? ""} maxLength={300} />
+            <Input id="address" name="address" defaultValue={field("address")} maxLength={300} />
           </Field>
           <Field id="city_parish" label="City / Parish" errors={errors.city_parish}>
-            <Input id="city_parish" name="city_parish" defaultValue={defaultValues?.city_parish ?? ""} maxLength={100} />
+            <Input id="city_parish" name="city_parish" defaultValue={field("city_parish")} maxLength={100} />
           </Field>
           <Field id="country" label="Country" errors={errors.country}>
-            <Input id="country" name="country" defaultValue={defaultValues?.country ?? ""} maxLength={100} />
+            <Input id="country" name="country" defaultValue={field("country")} maxLength={100} />
           </Field>
           <Field id="emergency_contact_name" label="Emergency contact name" errors={errors.emergency_contact_name}>
             <Input
               id="emergency_contact_name"
               name="emergency_contact_name"
-              defaultValue={defaultValues?.emergency_contact_name ?? ""}
+              defaultValue={field("emergency_contact_name")}
               maxLength={120}
             />
           </Field>
@@ -153,7 +162,7 @@ export function CustomerForm({
             <Input
               id="emergency_contact_phone"
               name="emergency_contact_phone"
-              defaultValue={defaultValues?.emergency_contact_phone ?? ""}
+              defaultValue={field("emergency_contact_phone")}
               maxLength={30}
             />
           </Field>
@@ -167,7 +176,7 @@ export function CustomerForm({
             <Input
               id="drivers_license_number"
               name="drivers_license_number"
-              defaultValue={defaultValues?.drivers_license_number ?? ""}
+              defaultValue={field("drivers_license_number")}
               maxLength={50}
             />
           </Field>
@@ -179,7 +188,7 @@ export function CustomerForm({
             <Input
               id="drivers_license_issuing_country"
               name="drivers_license_issuing_country"
-              defaultValue={defaultValues?.drivers_license_issuing_country ?? ""}
+              defaultValue={field("drivers_license_issuing_country")}
               maxLength={100}
             />
           </Field>
@@ -192,7 +201,7 @@ export function CustomerForm({
               id="drivers_license_issue_date"
               name="drivers_license_issue_date"
               type="date"
-              defaultValue={defaultValues?.drivers_license_issue_date ?? ""}
+              defaultValue={field("drivers_license_issue_date")}
             />
           </Field>
           <Field id="drivers_license_expiry" label="License expiry" errors={errors.drivers_license_expiry}>
@@ -200,7 +209,7 @@ export function CustomerForm({
               id="drivers_license_expiry"
               name="drivers_license_expiry"
               type="date"
-              defaultValue={defaultValues?.drivers_license_expiry ?? ""}
+              defaultValue={field("drivers_license_expiry")}
             />
           </Field>
           <Field id="identification_type" label="ID type" errors={errors.identification_type}>
@@ -208,7 +217,7 @@ export function CustomerForm({
               id="identification_type"
               name="identification_type"
               placeholder="e.g. National ID"
-              defaultValue={defaultValues?.identification_type ?? ""}
+              defaultValue={field("identification_type")}
               maxLength={50}
             />
           </Field>
@@ -216,7 +225,7 @@ export function CustomerForm({
             <Input
               id="identification_number"
               name="identification_number"
-              defaultValue={defaultValues?.identification_number ?? ""}
+              defaultValue={field("identification_number")}
               maxLength={50}
             />
           </Field>
@@ -224,7 +233,7 @@ export function CustomerForm({
             <Input
               id="passport_number"
               name="passport_number"
-              defaultValue={defaultValues?.passport_number ?? ""}
+              defaultValue={field("passport_number")}
               maxLength={50}
             />
           </Field>
@@ -233,7 +242,7 @@ export function CustomerForm({
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" rows={4} defaultValue={defaultValues?.notes ?? ""} />
+        <Textarea id="notes" name="notes" rows={4} defaultValue={field("notes")} />
         <FieldError errors={errors.notes} />
       </div>
 

@@ -28,7 +28,13 @@ export function SignupForm() {
     <form action={formAction} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="full_name">Full name</Label>
-        <Input id="full_name" name="full_name" autoComplete="name" required />
+        <Input
+          id="full_name"
+          name="full_name"
+          autoComplete="name"
+          defaultValue={state.values?.full_name}
+          required
+        />
       </div>
 
       <div className="space-y-2">
@@ -39,6 +45,7 @@ export function SignupForm() {
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
+          defaultValue={state.values?.email}
           required
         />
       </div>

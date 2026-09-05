@@ -17,6 +17,21 @@ export interface CustomerActionState {
   fieldErrors?: Record<string, string[]>;
   duplicates?: Customer[];
   success?: boolean;
+  /**
+   * Echoes back whatever was submitted so the form can redisplay it after
+   * a failed attempt — a Server Action round trip re-renders this form
+   * from scratch, so relying on the browser to keep unsaved input would
+   * silently lose it the moment one field fails validation.
+   */
+  values?: Record<string, string>;
+}
+
+/** FormData -> plain string map, for echoing values back on a failed submission. */
+function formValues(formData: FormData): Record<string, string> {
+  return Object.fromEntries(
+    Array.from(formData.entries())
+      .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+  );
 }
 
 function dbErrorMessage(error: { code?: string; message: string }): string {
@@ -32,14 +47,16 @@ export async function createCustomer(
 ): Promise<CustomerActionState> {
   const { id: userId } = await requireRole(CUSTOMER_WRITERS);
 
+  const values = formValues(formData);
   const parsed = customerFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { fieldErrors: fieldErrors(parsed.error) };
+    return { fieldErrors: fieldErrors(parsed.error), values };
   }
 
   if (parsed.data.email && (await isEmailTaken(parsed.data.email))) {
     return {
       fieldErrors: { email: ["A customer with this email already exists."] },
+      values,
     };
   }
 
@@ -52,7 +69,7 @@ export async function createCustomer(
       identification_number: parsed.data.identification_number,
     });
     if (duplicates.length > 0) {
-      return { duplicates };
+      return { duplicates, values };
     }
   }
 
@@ -64,7 +81,7 @@ export async function createCustomer(
     .single();
 
   if (error || !data) {
-    return { error: dbErrorMessage(error ?? { message: "Could not create customer." }) };
+    return { error: dbErrorMessage(error ?? { message: "Could not create customer." }), values };
   }
 
   await logAudit({
@@ -86,14 +103,16 @@ export async function updateCustomer(
 ): Promise<CustomerActionState> {
   const { id: userId } = await requireRole(CUSTOMER_WRITERS);
 
+  const values = formValues(formData);
   const parsed = customerFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { fieldErrors: fieldErrors(parsed.error) };
+    return { fieldErrors: fieldErrors(parsed.error), values };
   }
 
   if (parsed.data.email && (await isEmailTaken(parsed.data.email, customerId))) {
     return {
       fieldErrors: { email: ["Another customer already uses this email."] },
+      values,
     };
   }
 
@@ -104,7 +123,7 @@ export async function updateCustomer(
     .eq("id", customerId);
 
   if (error) {
-    return { error: dbErrorMessage(error) };
+    return { error: dbErrorMessage(error), values };
   }
 
   await logAudit({

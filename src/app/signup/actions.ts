@@ -5,6 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export interface SignupState {
   error?: string;
   success?: boolean;
+  /**
+   * Echoes back the non-sensitive fields so the form can redisplay them
+   * after a failed attempt — Next.js re-rendering this form via the
+   * server action's returned state doesn't guarantee the browser keeps
+   * whatever was already typed, so relying on that would silently lose
+   * it. Passwords are deliberately never echoed back.
+   */
+  values?: { full_name: string; email: string };
 }
 
 /**
@@ -28,15 +36,16 @@ export async function signUp(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirm_password") ?? "");
+  const values = { full_name: fullName, email };
 
   if (!fullName || !email || !password) {
-    return { error: "Fill in your name, email and password." };
+    return { error: "Fill in your name, email and password.", values };
   }
   if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+    return { error: "Password must be at least 8 characters.", values };
   }
   if (password !== confirmPassword) {
-    return { error: "Passwords don't match." };
+    return { error: "Passwords don't match.", values };
   }
 
   const supabaseAdmin = createAdminClient();
@@ -49,9 +58,9 @@ export async function signUp(
 
   if (error) {
     if (error.code === "email_exists" || error.code === "user_already_exists") {
-      return { error: "An account with that email already exists — try signing in instead." };
+      return { error: "An account with that email already exists — try signing in instead.", values };
     }
-    return { error: error.message };
+    return { error: error.message, values };
   }
 
   return { success: true };

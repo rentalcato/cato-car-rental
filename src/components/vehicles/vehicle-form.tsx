@@ -47,6 +47,15 @@ export function VehicleForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
+  // Whatever was just submitted (and rejected) wins over the original
+  // defaultValues, so a failed attempt redisplays what you typed instead
+  // of resetting the form.
+  const values = state.values;
+  function field(name: keyof Vehicle): string | number {
+    if (values?.[name] !== undefined) return values[name];
+    const dv = defaultValues?.[name];
+    return dv === null || dv === undefined ? "" : (dv as string | number);
+  }
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
@@ -62,7 +71,7 @@ export function VehicleForm({
           <Input
             id="license_plate"
             name="license_plate"
-            defaultValue={defaultValues?.license_plate}
+            defaultValue={field("license_plate")}
             required
             maxLength={20}
             placeholder="e.g. AB 1234"
@@ -72,19 +81,19 @@ export function VehicleForm({
 
         <div className="space-y-2">
           <Label htmlFor="vin">VIN / chassis number</Label>
-          <Input id="vin" name="vin" defaultValue={defaultValues?.vin ?? ""} maxLength={32} />
+          <Input id="vin" name="vin" defaultValue={field("vin")} maxLength={32} />
           <FieldError errors={errors.vin} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="make">Make</Label>
-          <Input id="make" name="make" defaultValue={defaultValues?.make ?? ""} />
+          <Input id="make" name="make" defaultValue={field("make")} />
           <FieldError errors={errors.make} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="model">Model</Label>
-          <Input id="model" name="model" defaultValue={defaultValues?.model ?? ""} />
+          <Input id="model" name="model" defaultValue={field("model")} />
           <FieldError errors={errors.model} />
         </div>
 
@@ -95,14 +104,14 @@ export function VehicleForm({
             name="year"
             type="number"
             inputMode="numeric"
-            defaultValue={defaultValues?.year ?? ""}
+            defaultValue={field("year")}
           />
           <FieldError errors={errors.year} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="colour">Colour</Label>
-          <Input id="colour" name="colour" defaultValue={defaultValues?.colour ?? ""} />
+          <Input id="colour" name="colour" defaultValue={field("colour")} />
           <FieldError errors={errors.colour} />
         </div>
 
@@ -116,7 +125,7 @@ export function VehicleForm({
             step="0.01"
             min="0"
             required
-            defaultValue={defaultValues?.daily_rental_rate ?? ""}
+            defaultValue={field("daily_rental_rate")}
           />
           <FieldError errors={errors.daily_rental_rate} />
         </div>
@@ -129,14 +138,14 @@ export function VehicleForm({
             type="number"
             inputMode="numeric"
             min="0"
-            defaultValue={defaultValues?.current_mileage ?? ""}
+            defaultValue={field("current_mileage")}
           />
           <FieldError errors={errors.current_mileage} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="fuel_type">Fuel type</Label>
-          <Select name="fuel_type" defaultValue={defaultValues?.fuel_type ?? undefined}>
+          <Select name="fuel_type" defaultValue={values?.fuel_type || defaultValues?.fuel_type || undefined}>
             <SelectTrigger id="fuel_type" className="w-full">
               <SelectValue placeholder="Select fuel type" />
             </SelectTrigger>
@@ -155,7 +164,7 @@ export function VehicleForm({
           <Label htmlFor="vehicle_status">Status *</Label>
           <Select
             name="vehicle_status"
-            defaultValue={defaultValues?.vehicle_status ?? "available"}
+            defaultValue={values?.vehicle_status || defaultValues?.vehicle_status || "available"}
           >
             <SelectTrigger id="vehicle_status" className="w-full">
               <SelectValue placeholder="Select status" />
@@ -178,7 +187,7 @@ export function VehicleForm({
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" rows={4} defaultValue={defaultValues?.notes ?? ""} />
+        <Textarea id="notes" name="notes" rows={4} defaultValue={field("notes")} />
         <FieldError errors={errors.notes} />
       </div>
 
