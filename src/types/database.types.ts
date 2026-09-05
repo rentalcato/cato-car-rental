@@ -95,6 +95,7 @@ export type Customer = {
   photo_storage_path: string | null;
   status: CustomerStatus;
   notes: string | null;
+  profile_id: string | null;
   created_at: string;
   updated_at: string;
 };

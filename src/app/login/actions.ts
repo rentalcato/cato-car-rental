@@ -35,5 +35,28 @@ export async function login(
     return { error: "Invalid email or password." };
   }
 
-  redirect(next.startsWith("/") ? next : "/dashboard");
+  const target = next.startsWith("/") ? next : "/dashboard";
+
+  // No explicit deep link (the default fallback) — send a customer
+  // somewhere that actually exists for them instead of the staff
+  // dashboard they have no access to. An explicit next= (set by the
+  // middleware when bouncing an unauthenticated visitor off a specific
+  // protected page) is always honored as-is.
+  if (target === "/dashboard") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile?.role === "customer") {
+        redirect("/account");
+      }
+    }
+  }
+
+  redirect(target);
 }

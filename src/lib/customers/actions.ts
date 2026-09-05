@@ -152,3 +152,84 @@ export async function setCustomerStatus(
   revalidatePath(`/customers/${customerId}`);
   return {};
 }
+
+export interface LinkAccountState {
+  error?: string;
+  success?: boolean;
+}
+
+/**
+ * Connects a customer's real rental record to the login they use for
+ * public sign-up (0014 migration) — only then can that account see its
+ * own booking history under RLS's customers_select_own/rentals_select_own.
+ * Deliberately only matches role='customer' profiles: linking a staff
+ * account to a renter record would make no sense and could look like a
+ * privilege trick.
+ */
+export async function linkCustomerAccount(
+  customerId: string,
+  email: string
+): Promise<LinkAccountState> {
+  const { id: actorId } = await requireRole(STATUS_MANAGERS);
+
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) return { error: "Enter the account's email address." };
+
+  const supabase = await createClient();
+  const { data: matchedProfile, error: lookupError } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .ilike("email", trimmedEmail)
+    .eq("role", "customer")
+    .maybeSingle();
+
+  if (lookupError) return { error: lookupError.message };
+  if (!matchedProfile) {
+    return { error: "No customer account found with that email." };
+  }
+
+  const { error } = await supabase
+    .from("customers")
+    .update({ profile_id: matchedProfile.id })
+    .eq("id", customerId);
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "That account is already linked to a different customer record." };
+    }
+    return { error: error.message };
+  }
+
+  await logAudit({
+    actorId,
+    action: "customer_account_linked",
+    entityType: "customer",
+    entityId: customerId,
+    metadata: { email: matchedProfile.email },
+  });
+
+  revalidatePath(`/customers/${customerId}`);
+  return { success: true };
+}
+
+export async function unlinkCustomerAccount(customerId: string): Promise<LinkAccountState> {
+  const { id: actorId } = await requireRole(STATUS_MANAGERS);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customers")
+    .update({ profile_id: null })
+    .eq("id", customerId);
+
+  if (error) return { error: error.message };
+
+  await logAudit({
+    actorId,
+    action: "customer_account_unlinked",
+    entityType: "customer",
+    entityId: customerId,
+  });
+
+  revalidatePath(`/customers/${customerId}`);
+  return { success: true };
+}

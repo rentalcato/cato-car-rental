@@ -79,6 +79,11 @@ move to the next one):
     `website_display_order` and updates `public_vehicle_listings` to
     respect them, so an admin can choose which vehicles the public
     homepage shows and in what order (Settings → Website)
+14. `0014_customer_accounts.sql` — adds `customers.profile_id` (links a
+    `customer`-role login to a real customer record) and three additive
+    `select` policies so a signed-in customer can read only their own
+    linked customer/rental/vehicle rows — see "Customer account area"
+    below
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -127,7 +132,7 @@ with the Super Admin account you created above.
 | super_admin | Everything, including changing a customer's status and hard-deleting a customer record (rarely needed — see Data Retention below) |
 | manager     | Everything staff can, plus: change a customer's status (Active/Restricted/Blacklisted/Inactive), override a blacklist restriction at checkout/reservation check-in, delete a customer document, manage vehicles, view/manage payments and maintenance |
 | staff       | Create/edit vehicles and customers, upload customer documents, search customers, check a customer out (create a rental) and complete/return it, and book/check-in/cancel reservations — see `src/components/layout/nav-config.ts` and `supabase/migrations/0003_rls_policies.sql`/`0006_phase3_customer_rental_management.sql`/`0007_reservations.sql`/`0008_rental_completion_and_fixes.sql`. Cannot change a customer's status, delete a document, or record a standalone payment/refund (Payments stays manager+ only). |
-| customer    | **No dashboard access at all.** The default role for every brand-new profile (0012) — public sign-up or admin-created. Can only read their own `profiles` row. An admin promotes a real account to one of the roles above from Settings → Users & Roles. |
+| customer    | **No staff dashboard access.** The default role for every brand-new profile (0012) — public sign-up or admin-created. Lands on `/account` (0014) instead: their own profile, and their own booking history once staff link their account to a `customers` record. An admin promotes a real account to one of the roles above from Settings → Users & Roles. |
 
 ## Data retention
 
@@ -289,8 +294,22 @@ Supabase project's own storage hostname, derived from
 Supabase Storage URL, and `next/image` hard-errors on any host that
 isn't explicitly allowed.
 
+**Customer account area** (`/account`, any signed-in user) — where a
+`customer` login actually lands now instead of `/unauthorized`: their
+profile (name/email, read-only — self profile editing isn't built yet),
+and, once staff link their account to a real `customers` record, their
+real booking history (0014). Linking happens from **Customers → a
+customer's profile → Overview tab → "Website Account"** (manager+ only,
+by the account's email) — unlinked customers see a "not linked yet"
+message with the business's contact info instead of any booking data.
+`/login` and the post-sign-in redirect both send a `customer` to
+`/account` rather than `/dashboard` automatically; an explicit deep
+link (e.g. bounced off a specific protected page) is still honored as
+typed.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
-editing/deleting a maintenance or issue record once logged, a real
-customer-facing account area (a signed-up `customer` has an account but
-no in-app page of their own yet beyond the marketing site).
+editing/deleting a maintenance or issue record once logged, a customer
+editing their own profile, and self-service booking (a customer
+requesting a reservation themselves — today only staff create
+rentals/reservations, even for a linked customer).

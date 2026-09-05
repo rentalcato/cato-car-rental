@@ -13,6 +13,11 @@ import type {
   VehicleIssue,
 } from "@/types/database.types";
 
+export interface LinkedAccount {
+  email: string | null;
+  full_name: string | null;
+}
+
 export interface CustomerListFilters {
   search?: string;
   status?: CustomerStatus | "all";
@@ -121,6 +126,7 @@ export interface VehicleRentedSummary {
 
 export interface CustomerProfile {
   customer: Customer;
+  linkedAccount: LinkedAccount | null;
   photoUrl: string | null;
   documents: CustomerDocument[];
   currentRental: CustomerRentalRow | null;
@@ -141,7 +147,7 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
   const customer = await getCustomer(id);
   if (!customer) return null;
 
-  const [rentalsResult, paymentsResult, documents, photoUrl] = await Promise.all([
+  const [rentalsResult, paymentsResult, documents, photoUrl, linkedAccount] = await Promise.all([
     supabase
       .from("rentals")
       .select("*, vehicle:vehicles(license_plate, make, model)")
@@ -154,6 +160,14 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
       .order("payment_date", { ascending: false }),
     getCustomerDocuments(id),
     getCustomerPhotoUrl(customer.photo_storage_path),
+    customer.profile_id
+      ? supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", customer.profile_id)
+          .maybeSingle()
+          .then((r) => (r.data as LinkedAccount | null) ?? null)
+      : Promise.resolve(null),
   ]);
 
   if (rentalsResult.error) throw rentalsResult.error;
@@ -200,6 +214,7 @@ export async function getCustomerProfile(id: string): Promise<CustomerProfile | 
 
   return {
     customer,
+    linkedAccount,
     photoUrl,
     documents,
     currentRental,

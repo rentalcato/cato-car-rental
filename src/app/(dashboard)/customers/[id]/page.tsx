@@ -9,6 +9,7 @@ import { CustomerStatusBadge } from "@/components/customers/customer-status-badg
 import { CustomerStatusDialog } from "@/components/customers/customer-status-dialog";
 import { CustomerWarningBanner } from "@/components/customers/customer-warning-banner";
 import { CustomerPhotoUploader } from "@/components/customers/customer-photo-uploader";
+import { CustomerAccountLink } from "@/components/customers/customer-account-link";
 import { CustomerDocumentsPanel } from "@/components/customers/customer-documents-panel";
 import { CustomerRentalHistoryTable } from "@/components/customers/customer-rental-history-table";
 import { CustomerFinancialSummary } from "@/components/customers/customer-financial-summary";
@@ -44,6 +45,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
 
   const {
     customer,
+    linkedAccount,
     photoUrl,
     documents,
     currentRental,
@@ -134,6 +136,15 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          {canManageStatus ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="mb-3 text-sm font-semibold">Website Account</p>
+                <CustomerAccountLink customerId={customer.id} linkedAccount={linkedAccount} />
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardContent className="pt-6">
               <p className="mb-3 text-sm font-semibold">Personal Information</p>

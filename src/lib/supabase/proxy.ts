@@ -70,7 +70,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === "/login") {
-    return redirectCarryingCookies(new URL("/dashboard", request.url));
+    // A customer has no dashboard access at all — send them somewhere
+    // that actually exists for them instead of straight into a bounce
+    // to /unauthorized.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const destination = profile?.role === "customer" ? "/account" : "/dashboard";
+    return redirectCarryingCookies(new URL(destination, request.url));
   }
 
   return response;
