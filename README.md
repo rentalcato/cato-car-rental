@@ -5,8 +5,9 @@ role-aware dashboard shell. Phase 2 added fleet (vehicle) management.
 Phase 3 turns Customers into a full renter-profile system (documents,
 status/blacklist workflow, audit logging) and adds rental checkout, plus
 reservations (book now, check in later), rental completion (check-in/
-return), a standalone Payments ledger, and Settings + Reports. Only
-Maintenance is still a placeholder.
+return), a standalone Payments ledger, Settings + Reports, and
+Maintenance & Issues. Every sidebar page now has real functionality —
+nothing left is a placeholder.
 
 Deployed at https://cato-car-rental.vercel.app (source:
 https://github.com/rentalcato/cato-car-rental) — Vercel auto-deploys on
@@ -60,6 +61,9 @@ move to the next one):
    payment or refund independent of checkout/check-in/completion
 10. `0010_settings_and_reports_support.sql` — the `app_settings` singleton
     table + the public `business-assets` bucket for the business logo
+11. `0011_maintenance_and_issues.sql` — receipt/photo attachment columns,
+    the new `damaged` vehicle status, and the private
+    `maintenance-attachments` bucket
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -208,6 +212,24 @@ rentals, average rental duration, and reservation-to-active conversion
 rate — all computed from live data (no fake numbers), no new tables
 beyond Settings' one.
 
+**Maintenance & Issues** (`/maintenance`, manager+) — the last
+placeholder page, now two tabs:
+
+- **Service Records**: log a maintenance record (type, dates, mileage,
+  cost, provider, receipt upload) against any vehicle, with an
+  optional "send to maintenance now" that flips the vehicle to the
+  `maintenance` status. An "Upcoming Service" section flags anything
+  due (or overdue) in the next 30 days.
+- **Damage & Issues**: report damage/an issue (type, severity, repair
+  cost, photo) against any vehicle, with an optional "take out of
+  service" that sets a new `damaged` vehicle status. Open issues can
+  be resolved from the same table.
+- Either state clears via a shared "Return to Service" button on the
+  vehicle profile — still blocked if that vehicle genuinely has an
+  open rental (same 0008 trigger as everywhere else). No staff
+  access to any of this, matching the existing nav-config gate.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
-reservation's vehicle/dates, maintenance, email notifications, an
-audit-log viewer, new-account/invite flow.
+reservation's vehicle/dates, email notifications, an audit-log viewer,
+new-account/invite flow, editing/deleting a maintenance or issue record
+once logged.
