@@ -56,6 +56,8 @@ export type Vehicle = {
   notes: string | null;
   date_added: string;
   archived_at: string | null;
+  is_featured: boolean;
+  website_display_order: number;
   created_at: string;
   updated_at: string;
 };
@@ -226,6 +228,7 @@ export type PublicVehicleListing = {
   colour: string | null;
   daily_rental_rate: number | null;
   fuel_type: FuelType | null;
+  website_display_order: number;
   photo_storage_path: string | null;
 };
 

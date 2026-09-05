@@ -69,6 +69,10 @@ move to the next one):
     two read-only views (`public_vehicle_listings`,
     `public_business_info`) that let the public homepage show real
     fleet/business data without loosening any existing RLS policy
+13. `0013_featured_vehicles.sql` — adds `vehicles.is_featured` /
+    `website_display_order` and updates `public_vehicle_listings` to
+    respect them, so an admin can choose which vehicles the public
+    homepage shows and in what order (Settings → Website)
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -255,7 +259,11 @@ read-only views rather than loosening any RLS policy on
 `customer` role this also introduces). "Browse Vehicles"/"Reserve a
 Vehicle" scroll to the fleet section — no fake public booking flow.
 `/login` and `/signup` are real, unauthenticated pages; every dashboard
-route is exactly as protected as before.
+route is exactly as protected as before. A Super Admin controls which
+vehicles show in the fleet section, and their order, from Settings →
+Website (0013) — a vehicle also needs to be `available` for it to
+actually appear; new vehicles default to shown so nothing changes until
+someone opts one out.
 
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,

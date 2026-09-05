@@ -93,6 +93,7 @@ export async function getFleetShowcase(): Promise<FleetCard[]> {
   const { data, error } = await supabase
     .from("public_vehicle_listings")
     .select("*")
+    .order("website_display_order", { ascending: true })
     .order("daily_rental_rate", { ascending: true })
     .limit(8);
 

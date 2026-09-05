@@ -140,6 +140,44 @@ export async function updateProfileRole(
   return { success: true };
 }
 
+export async function setVehicleFeatured(
+  vehicleId: string,
+  isFeatured: boolean
+): Promise<SettingsActionState> {
+  await requireRole(SETTINGS_ADMINS);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("vehicles")
+    .update({ is_featured: isFeatured })
+    .eq("id", vehicleId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function setVehicleDisplayOrder(
+  vehicleId: string,
+  order: number
+): Promise<SettingsActionState> {
+  await requireRole(SETTINGS_ADMINS);
+
+  if (!Number.isInteger(order)) return { error: "Order must be a whole number." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("vehicles")
+    .update({ website_display_order: order })
+    .eq("id", vehicleId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function setProfileActive(
   profileId: string,
   isActive: boolean

@@ -5,16 +5,23 @@ import { BusinessSettingsForm } from "@/components/settings/business-settings-fo
 import { RentalSettingsForm } from "@/components/settings/rental-settings-form";
 import { LogoUploader } from "@/components/settings/logo-uploader";
 import { StaffAccountsTable } from "@/components/settings/staff-accounts-table";
+import { FeaturedVehiclesTable } from "@/components/settings/featured-vehicles-table";
 import { requireRole } from "@/lib/auth/dal";
-import { getAppSettings, getBusinessLogoUrl, listStaffAccounts } from "@/lib/settings/queries";
+import {
+  getAppSettings,
+  getBusinessLogoUrl,
+  listStaffAccounts,
+  listWebsiteVehicles,
+} from "@/lib/settings/queries";
 
 export default async function SettingsPage() {
   const { id: currentUserId } = await requireRole(["super_admin"]);
 
   const settings = await getAppSettings();
-  const [logoUrl, staffAccounts] = await Promise.all([
+  const [logoUrl, staffAccounts, websiteVehicles] = await Promise.all([
     getBusinessLogoUrl(settings.logo_storage_path),
     listStaffAccounts(),
+    listWebsiteVehicles(),
   ]);
 
   return (
@@ -26,6 +33,7 @@ export default async function SettingsPage() {
           <TabsTrigger value="business">Business</TabsTrigger>
           <TabsTrigger value="rentals">Rental Defaults</TabsTrigger>
           <TabsTrigger value="users">Users &amp; Roles</TabsTrigger>
+          <TabsTrigger value="website">Website</TabsTrigger>
         </TabsList>
 
         <TabsContent value="business" className="space-y-4">
@@ -51,6 +59,14 @@ export default async function SettingsPage() {
 
         <TabsContent value="users">
           <StaffAccountsTable profiles={staffAccounts} currentUserId={currentUserId} />
+        </TabsContent>
+
+        <TabsContent value="website">
+          <Card>
+            <CardContent className="pt-6">
+              <FeaturedVehiclesTable vehicles={websiteVehicles} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

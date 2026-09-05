@@ -1,7 +1,12 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { AppSettings, Profile } from "@/types/database.types";
+import type { AppSettings, Profile, Vehicle } from "@/types/database.types";
+
+export type WebsiteVehicleRow = Pick<
+  Vehicle,
+  "id" | "license_plate" | "make" | "model" | "year" | "vehicle_status" | "is_featured" | "website_display_order"
+>;
 
 export const LOGO_BUCKET = "business-assets";
 
@@ -27,4 +32,17 @@ export async function listStaffAccounts(): Promise<Profile[]> {
     .order("created_at", { ascending: true });
   if (error) throw error;
   return data as Profile[];
+}
+
+/** Non-archived vehicles, for the "Website" curation table — which of these are eligible to appear never matters here; that's the public_vehicle_listings view's job. */
+export async function listWebsiteVehicles(): Promise<WebsiteVehicleRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vehicles")
+    .select("id, license_plate, make, model, year, vehicle_status, is_featured, website_display_order")
+    .is("archived_at", null)
+    .order("make", { ascending: true })
+    .order("model", { ascending: true });
+  if (error) throw error;
+  return data as WebsiteVehicleRow[];
 }
