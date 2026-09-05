@@ -23,7 +23,11 @@ export function SidebarNav({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 px-4 py-4 text-lg font-semibold">
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className="flex items-center gap-2 px-4 py-4 text-lg font-semibold"
+      >
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt="" className="size-6 shrink-0 object-contain" />
@@ -31,7 +35,7 @@ export function SidebarNav({
           <Car className="size-6 shrink-0" />
         )}
         <span className="truncate">{businessName || "Fleet Manager"}</span>
-      </div>
+      </Link>
       <nav className="flex-1 space-y-1 overflow-y-auto px-2">
         {items.map((item) => {
           const isActive =

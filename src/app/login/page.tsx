@@ -9,15 +9,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/login-form";
+import { getPublicBusinessInfo } from "@/lib/marketing/queries";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const business = await getPublicBusinessInfo();
+  const businessName = business?.business_name || "Fleet Manager";
+
   return (
     <div className="flex min-h-screen">
       {/* Branding panel — hidden on small screens */}
       <div className="relative hidden w-1/2 flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
           <Car className="size-6" />
-          Fleet Manager
+          {businessName}
         </Link>
         <div className="space-y-2">
           <p className="text-2xl font-medium">
@@ -29,7 +33,7 @@ export default function LoginPage() {
           </p>
         </div>
         <p className="text-xs text-primary-foreground/50">
-          &copy; {new Date().getFullYear()} Fleet Manager
+          &copy; {new Date().getFullYear()} {businessName}
         </p>
       </div>
 
@@ -42,7 +46,7 @@ export default function LoginPage() {
               className="mx-auto mb-2 flex items-center gap-2 text-lg font-semibold lg:hidden"
             >
               <Car className="size-6" />
-              Fleet Manager
+              {businessName}
             </Link>
             <CardTitle className="text-xl">Sign in</CardTitle>
             <CardDescription>
