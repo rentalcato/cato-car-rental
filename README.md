@@ -92,6 +92,10 @@ move to the next one):
     in. Harmless while only staff had accounts; not harmless once
     public sign-up existed. **Apply this one even if you don't care
     about self-service booking.**
+16. `0016_placeholder_vehicles.sql` — seeds the four vehicles that used
+    to only exist as hardcoded stock photos (shown on the public site
+    whenever the fleet was empty) as real, removable rows instead —
+    plate `DEMO-001` through `DEMO-004`. See "Vehicles" below.
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -164,7 +168,23 @@ placeholder route for every module.
 
 **Phase 2** — Fleet management: list with search/status filters, add/edit,
 archive (soft delete) + restore, photo uploads, and a vehicle profile page
-with rental/maintenance/issue history.
+with rental/maintenance/issue history. Add Vehicle also accepts photo(s)
+directly on that same form (optional) — no need to save first and add
+photos afterward on the profile page, though that still works too and is
+the only way to add more later. If the photo upload itself fails, the
+vehicle is still saved (never lost over a photo hiccup) and its profile
+page shows a banner pointing at the Photos tab to retry.
+
+Four placeholder vehicles ship seeded in (0016, plate `DEMO-001`–`DEMO-004`,
+notes explain what they are) so the public site never launches looking
+empty. They're ordinary vehicles — remove them the same way as any
+other once you have real inventory: un-feature from **Settings →
+Website** to hide them from the public site while keeping the record,
+or **Archive**/delete them from the Vehicles list to remove them
+entirely. `FALLBACK_VEHICLES` (hardcoded stock photos in
+`src/lib/marketing/queries.ts`) still exists underneath as a last-resort
+safety net for the rare case every vehicle, placeholders included, gets
+removed — the public fleet section should never render truly empty.
 
 **Phase 3** — Customer/renter profile management + rental checkout:
 

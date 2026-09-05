@@ -34,6 +34,8 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
   const canManage = canAccess(profile.role, ["super_admin", "manager"]);
 
   const { id } = await props.params;
+  const searchParams = await props.searchParams;
+  const photoError = searchParams.photoError === "1";
   const data = await getVehicleProfile(id);
   if (!data) notFound();
 
@@ -51,6 +53,13 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
 
   return (
     <div>
+      {photoError ? (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Vehicle saved, but the photo you added couldn&apos;t be uploaded. Try again from the
+          Photos tab below.
+        </div>
+      ) : null}
+
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -123,7 +132,7 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
         {pendingReservation ? <UpcomingReservationCard reservation={pendingReservation} /> : null}
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue={photoError ? "photos" : "overview"}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="photos">Photos ({photos.length})</TabsTrigger>

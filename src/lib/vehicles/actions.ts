@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { dailyRateSchema, fieldErrors, vehicleFormSchema } from "@/lib/vehicles/schema";
 import { isLicensePlateTaken } from "@/lib/vehicles/queries";
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
 const FLEET_MANAGERS = ["super_admin", "manager"] as const;
 const PHOTO_BUCKET = "vehicle-photos";
 
@@ -37,6 +39,36 @@ function dbErrorMessage(error: { code?: string; message: string }): string {
     return "A vehicle with this license plate or VIN already exists.";
   }
   return error.message;
+}
+
+/** Shared by uploadVehiclePhotos() and createVehicle()'s optional at-creation photo(s). */
+async function uploadVehiclePhotoFiles(
+  supabase: SupabaseServerClient,
+  vehicleId: string,
+  files: File[]
+): Promise<{ error?: string }> {
+  for (const file of files) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${vehicleId}/${crypto.randomUUID()}-${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(path, file, { contentType: file.type || "image/jpeg" });
+
+    if (uploadError) {
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+
+    const { error: insertError } = await supabase
+      .from("vehicle_photos")
+      .insert({ vehicle_id: vehicleId, storage_path: path });
+
+    if (insertError) {
+      return { error: dbErrorMessage(insertError) };
+    }
+  }
+
+  return {};
 }
 
 export async function createVehicle(
@@ -71,8 +103,22 @@ export async function createVehicle(
     return { error: dbErrorMessage(error ?? { message: "Could not create vehicle." }), values };
   }
 
+  // Optional photo(s) chosen on the Add Vehicle form itself. Best-effort:
+  // the vehicle record is already safely created at this point, so a
+  // photo upload failure shouldn't undo that — it's surfaced as a banner
+  // on the vehicle's profile page instead (?photoError=1), where Photos
+  // already has its own retry upload control.
+  const photoFiles = formData
+    .getAll("photos")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  let photoError = false;
+  if (photoFiles.length > 0) {
+    const photoResult = await uploadVehiclePhotoFiles(supabase, data.id, photoFiles);
+    photoError = Boolean(photoResult.error);
+  }
+
   revalidatePath("/vehicles");
-  redirect(`/vehicles/${data.id}`);
+  redirect(`/vehicles/${data.id}${photoError ? "?photoError=1" : ""}`);
 }
 
 export async function updateVehicle(
@@ -188,26 +234,9 @@ export async function uploadVehiclePhotos(
   }
 
   const supabase = await createClient();
-
-  for (const file of files) {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${vehicleId}/${crypto.randomUUID()}-${safeName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(PHOTO_BUCKET)
-      .upload(path, file, { contentType: file.type || "image/jpeg" });
-
-    if (uploadError) {
-      return { error: `Upload failed: ${uploadError.message}` };
-    }
-
-    const { error: insertError } = await supabase
-      .from("vehicle_photos")
-      .insert({ vehicle_id: vehicleId, storage_path: path });
-
-    if (insertError) {
-      return { error: dbErrorMessage(insertError) };
-    }
+  const result = await uploadVehiclePhotoFiles(supabase, vehicleId, files);
+  if (result.error) {
+    return { error: result.error };
   }
 
   revalidatePath(`/vehicles/${vehicleId}`);

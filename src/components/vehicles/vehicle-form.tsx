@@ -51,6 +51,9 @@ export function VehicleForm({
   // defaultValues, so a failed attempt redisplays what you typed instead
   // of resetting the form.
   const values = state.values;
+  // Only the Add Vehicle form (no id yet) offers a photo picker here —
+  // an existing vehicle already has its own Photos panel on its profile.
+  const isCreate = !defaultValues?.id;
   function field(name: keyof Vehicle): string | number {
     if (values?.[name] !== undefined) return values[name];
     const dv = defaultValues?.[name];
@@ -190,6 +193,23 @@ export function VehicleForm({
         <Textarea id="notes" name="notes" rows={4} defaultValue={field("notes")} />
         <FieldError errors={errors.notes} />
       </div>
+
+      {isCreate ? (
+        <div className="space-y-2">
+          <Label htmlFor="photos">Photos (optional)</Label>
+          <input
+            id="photos"
+            type="file"
+            name="photos"
+            accept="image/*"
+            multiple
+            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground"
+          />
+          <p className="text-xs text-muted-foreground">
+            You can add or change photos later from the vehicle&apos;s profile too.
+          </p>
+        </div>
+      ) : null}
 
       <div className="flex justify-end gap-3">
         <Button type="submit" disabled={pending}>
