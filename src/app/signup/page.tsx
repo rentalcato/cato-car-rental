@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { Car } from "lucide-react";
 import {
@@ -8,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LoginForm } from "@/components/auth/login-form";
+import { SignupForm } from "@/components/auth/signup-form";
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="flex min-h-screen">
       {/* Branding panel — hidden on small screens */}
@@ -20,12 +19,10 @@ export default function LoginPage() {
           Fleet Manager
         </Link>
         <div className="space-y-2">
-          <p className="text-2xl font-medium">
-            Manage your rental fleet from one place.
-          </p>
+          <p className="text-2xl font-medium">Your journey starts here.</p>
           <p className="text-sm text-primary-foreground/70">
-            Vehicles, customers, rentals and payments — built for teams
-            operating in Jamaica.
+            Create an account to get started. Vehicles, customers, rentals
+            and payments — built for teams operating in Jamaica.
           </p>
         </div>
         <p className="text-xs text-primary-foreground/50">
@@ -33,7 +30,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Login panel */}
+      {/* Sign-up panel */}
       <div className="flex w-full flex-1 items-center justify-center p-6 lg:w-1/2">
         <Card className="w-full max-w-sm">
           <CardHeader className="space-y-1 text-center">
@@ -44,19 +41,15 @@ export default function LoginPage() {
               <Car className="size-6" />
               Fleet Manager
             </Link>
-            <CardTitle className="text-xl">Sign in</CardTitle>
-            <CardDescription>
-              Enter your email and password to access the dashboard.
-            </CardDescription>
+            <CardTitle className="text-xl">Create an account</CardTitle>
+            <CardDescription>Sign up to get started.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Suspense>
-              <LoginForm />
-            </Suspense>
+            <SignupForm />
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-medium text-foreground hover:underline">
-                Sign Up
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-foreground hover:underline">
+                Sign In
               </Link>
             </p>
           </CardContent>

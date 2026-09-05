@@ -46,7 +46,15 @@ export const PAYMENT_METHODS = [
   "other",
 ] as const;
 
-export const USER_ROLES = ["super_admin", "manager", "staff"] as const;
+/**
+ * 'customer' is the default role for every brand-new profile (public
+ * sign-up or an admin-created account) as of the 0012 migration — it's
+ * deliberately never included in any requireRole([...]) allowlist or
+ * nav-config entry, so it has no dashboard access at all. An admin
+ * promotes a trusted account to staff/manager/super_admin from
+ * Settings -> Users & Roles.
+ */
+export const USER_ROLES = ["super_admin", "manager", "staff", "customer"] as const;
 
 export const CUSTOMER_STATUSES = ["active", "restricted", "blacklisted", "inactive"] as const;
 

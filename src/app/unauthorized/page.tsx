@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
         section. If you think this is a mistake, contact a manager or
         super admin.
       </p>
-      <Button render={<Link href="/dashboard" />}>Back to dashboard</Button>
+      <Button render={<Link href="/" />}>Back to home</Button>
     </div>
   );
 }

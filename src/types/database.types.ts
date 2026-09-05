@@ -217,6 +217,27 @@ export type AppSettings = {
   updated_at: string;
 };
 
+/** Read-only view (0012) — anon-readable subset of `vehicles`/`vehicle_photos`. */
+export type PublicVehicleListing = {
+  id: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  colour: string | null;
+  daily_rental_rate: number | null;
+  fuel_type: FuelType | null;
+  photo_storage_path: string | null;
+};
+
+/** Read-only view (0012) — anon-readable subset of `app_settings`. */
+export type PublicBusinessInfo = {
+  business_name: string | null;
+  logo_storage_path: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+};
+
 /**
  * Minimal Database shape so `createClient<Database>()` type-checks.
  * `Relationships: []` + empty `Views`/`Functions` are required to satisfy
@@ -242,6 +263,8 @@ export type Database = {
       vehicle_issues: Table<VehicleIssue>;
       maintenance: Table<Maintenance>;
       app_settings: Table<AppSettings>;
+      public_vehicle_listings: Table<PublicVehicleListing>;
+      public_business_info: Table<PublicBusinessInfo>;
     };
     Views: Record<string, never>;
     Functions: {
