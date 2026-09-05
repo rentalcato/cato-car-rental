@@ -49,9 +49,9 @@ export async function recordPayment(
     return { error: error?.message ?? "Could not record the payment." };
   }
 
-  revalidatePath("/dashboard/payments");
-  revalidatePath("/dashboard/rentals");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath("/payments");
+  revalidatePath("/rentals");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
   return { success: true };
 }

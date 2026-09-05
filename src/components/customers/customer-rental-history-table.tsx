@@ -40,7 +40,7 @@ export function CustomerRentalHistoryTable({ rentals }: { rentals: CustomerRenta
               <TableCell>
                 {rental.vehicle ? (
                   <Link
-                    href={`/dashboard/vehicles/${rental.vehicle_id}`}
+                    href={`/vehicles/${rental.vehicle_id}`}
                     className="hover:underline"
                   >
                     {rental.vehicle.license_plate}

@@ -27,7 +27,7 @@ export default async function RentalsPage(props: PageProps<"/rentals">) {
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <PageHeader title="Rentals" description="Create rentals, check vehicles in/out, track balances." />
-        <Button render={<Link href="/dashboard/rentals/new" />}>
+        <Button render={<Link href="/rentals/new" />}>
           <Plus className="size-4" />
           New Rental
         </Button>

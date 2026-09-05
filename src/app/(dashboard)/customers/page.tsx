@@ -26,7 +26,7 @@ export default async function CustomersPage(props: PageProps<"/customers">) {
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <PageHeader title="Customers" description="Customer records, licenses and identification." />
-        <Button render={<Link href="/dashboard/customers/new" />}>
+        <Button render={<Link href="/customers/new" />}>
           <Plus className="size-4" />
           Add Customer
         </Button>

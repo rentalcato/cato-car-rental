@@ -54,8 +54,8 @@ export async function createVehicle(
     return { error: dbErrorMessage(error ?? { message: "Could not create vehicle." }) };
   }
 
-  revalidatePath("/dashboard/vehicles");
-  redirect(`/dashboard/vehicles/${data.id}`);
+  revalidatePath("/vehicles");
+  redirect(`/vehicles/${data.id}`);
 }
 
 export async function updateVehicle(
@@ -88,9 +88,9 @@ export async function updateVehicle(
     return { error: dbErrorMessage(error) };
   }
 
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
-  redirect(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  redirect(`/vehicles/${vehicleId}`);
 }
 
 export async function updateDailyRate(
@@ -115,8 +115,8 @@ export async function updateDailyRate(
     return { error: dbErrorMessage(error) };
   }
 
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
   return { success: true };
 }
 
@@ -135,8 +135,8 @@ export async function archiveVehicle(vehicleId: string): Promise<VehicleMutation
 
   if (error) return { error: dbErrorMessage(error) };
 
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
   return {};
 }
 
@@ -151,8 +151,8 @@ export async function restoreVehicle(vehicleId: string): Promise<VehicleMutation
 
   if (error) return { error: dbErrorMessage(error) };
 
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
   return {};
 }
 
@@ -191,7 +191,7 @@ export async function uploadVehiclePhotos(
     }
   }
 
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath(`/vehicles/${vehicleId}`);
   return { success: true };
 }
 
@@ -215,6 +215,6 @@ export async function deleteVehiclePhoto(
     .eq("vehicle_id", vehicleId);
   if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
+  revalidatePath(`/vehicles/${vehicleId}`);
   return {};
 }

@@ -33,7 +33,7 @@ export default async function VehiclesPage(props: PageProps<"/vehicles">) {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <PageHeader title="Vehicles" description="Your rental fleet, at a glance." />
         {canManage ? (
-          <Button render={<Link href="/dashboard/vehicles/new" />}>
+          <Button render={<Link href="/vehicles/new" />}>
             <Plus className="size-4" />
             Add Vehicle
           </Button>

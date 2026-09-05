@@ -75,8 +75,8 @@ export async function createCustomer(
     entityLabel: `${parsed.data.first_name} ${parsed.data.last_name}`,
   });
 
-  revalidatePath("/dashboard/customers");
-  redirect(`/dashboard/customers/${data.id}`);
+  revalidatePath("/customers");
+  redirect(`/customers/${data.id}`);
 }
 
 export async function updateCustomer(
@@ -115,9 +115,9 @@ export async function updateCustomer(
     entityLabel: `${parsed.data.first_name} ${parsed.data.last_name}`,
   });
 
-  revalidatePath("/dashboard/customers");
-  revalidatePath(`/dashboard/customers/${customerId}`);
-  redirect(`/dashboard/customers/${customerId}`);
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${customerId}`);
+  redirect(`/customers/${customerId}`);
 }
 
 export interface StatusActionState {
@@ -148,7 +148,7 @@ export async function setCustomerStatus(
     return { error: error.message };
   }
 
-  revalidatePath("/dashboard/customers");
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${customerId}`);
   return {};
 }

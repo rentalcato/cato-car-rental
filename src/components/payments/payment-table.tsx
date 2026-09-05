@@ -58,7 +58,7 @@ export function PaymentTable({ payments }: { payments: PaymentListRow[] }) {
                 <TableCell>
                   {payment.customer ? (
                     <Link
-                      href={`/dashboard/customers/${payment.customer.id}`}
+                      href={`/customers/${payment.customer.id}`}
                       className="hover:underline"
                     >
                       {payment.customer.first_name} {payment.customer.last_name}

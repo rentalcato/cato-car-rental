@@ -52,7 +52,7 @@ export function VehicleTable({
               <TableRow key={vehicle.id} className="cursor-default">
                 <TableCell className="font-semibold">
                   <Link
-                    href={`/dashboard/vehicles/${vehicle.id}`}
+                    href={`/vehicles/${vehicle.id}`}
                     className="hover:underline"
                   >
                     {vehicle.license_plate}
@@ -80,7 +80,7 @@ export function VehicleTable({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      render={<Link href={`/dashboard/vehicles/${vehicle.id}/edit`} />}
+                      render={<Link href={`/vehicles/${vehicle.id}/edit`} />}
                     >
                       <Pencil className="size-3.5" />
                       <span className="sr-only">Edit {vehicle.license_plate}</span>
@@ -96,7 +96,7 @@ export function VehicleTable({
       {/* Mobile: stacked cards */}
       <div className="space-y-3 sm:hidden">
         {vehicles.map((vehicle) => (
-          <Link key={vehicle.id} href={`/dashboard/vehicles/${vehicle.id}`}>
+          <Link key={vehicle.id} href={`/vehicles/${vehicle.id}`}>
             <Card>
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">

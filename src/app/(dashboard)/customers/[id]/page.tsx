@@ -83,7 +83,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            render={<Link href={`/dashboard/rentals/new?customerId=${customer.id}`} />}
+            render={<Link href={`/rentals/new?customerId=${customer.id}`} />}
           >
             <Plus className="size-3.5" />
             New Rental
@@ -91,7 +91,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
           <Button
             variant="outline"
             size="sm"
-            render={<Link href={`/dashboard/reservations/new?customerId=${customer.id}`} />}
+            render={<Link href={`/reservations/new?customerId=${customer.id}`} />}
           >
             <CalendarClock className="size-3.5" />
             New Reservation
@@ -99,7 +99,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
           <Button
             variant="outline"
             size="sm"
-            render={<Link href={`/dashboard/customers/${customer.id}/edit`} />}
+            render={<Link href={`/customers/${customer.id}/edit`} />}
           >
             <Pencil className="size-3.5" />
             Edit
@@ -249,7 +249,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
               <h3 className="mb-2 text-sm font-semibold">Vehicles Previously Rented</h3>
               <div className="flex flex-wrap gap-2">
                 {vehiclesRented.map((vehicle) => (
-                  <Link key={vehicle.vehicleId} href={`/dashboard/vehicles/${vehicle.vehicleId}`}>
+                  <Link key={vehicle.vehicleId} href={`/vehicles/${vehicle.vehicleId}`}>
                     <Badge variant="outline" className="hover:bg-accent">
                       {vehicle.licensePlate}
                       {vehicle.make ? ` — ${vehicle.make} ${vehicle.model ?? ""}`.trimEnd() : ""}

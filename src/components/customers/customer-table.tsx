@@ -46,7 +46,7 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
                   {customer.customer_number}
                 </TableCell>
                 <TableCell className="font-semibold">
-                  <Link href={`/dashboard/customers/${customer.id}`} className="hover:underline">
+                  <Link href={`/customers/${customer.id}`} className="hover:underline">
                     {customer.first_name} {customer.last_name}
                   </Link>
                 </TableCell>
@@ -61,7 +61,7 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    render={<Link href={`/dashboard/customers/${customer.id}/edit`} />}
+                    render={<Link href={`/customers/${customer.id}/edit`} />}
                   >
                     <Pencil className="size-3.5" />
                     <span className="sr-only">
@@ -78,7 +78,7 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
       {/* Mobile: stacked cards */}
       <div className="space-y-3 sm:hidden">
         {customers.map((customer) => (
-          <Link key={customer.id} href={`/dashboard/customers/${customer.id}`}>
+          <Link key={customer.id} href={`/customers/${customer.id}`}>
             <Card>
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">

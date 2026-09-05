@@ -87,7 +87,7 @@ export async function uploadCustomerDocument(
     metadata: { document_id: data.id, document_type: documentType, file_name: file.name },
   });
 
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath(`/customers/${customerId}`);
   return { success: true };
 }
 
@@ -143,7 +143,7 @@ export async function deleteCustomerDocument(
     metadata: { document_id: documentId },
   });
 
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath(`/customers/${customerId}`);
   return {};
 }
 

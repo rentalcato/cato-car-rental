@@ -24,7 +24,7 @@ export function UpcomingReservationCard({ reservation }: { reservation: CurrentR
             value={
               reservation.customer ? (
                 <Link
-                  href={`/dashboard/customers/${reservation.customer.id}`}
+                  href={`/customers/${reservation.customer.id}`}
                   className="hover:underline"
                 >
                   {reservation.customer.first_name} {reservation.customer.last_name}

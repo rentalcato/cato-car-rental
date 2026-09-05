@@ -58,11 +58,11 @@ export async function checkoutRental(
     return { error: error?.message ?? "Could not create the rental." };
   }
 
-  revalidatePath("/dashboard/rentals");
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${values.vehicle_id}`);
-  revalidatePath(`/dashboard/customers/${values.customer_id}`);
-  redirect(`/dashboard/customers/${values.customer_id}`);
+  revalidatePath("/rentals");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${values.vehicle_id}`);
+  revalidatePath(`/customers/${values.customer_id}`);
+  redirect(`/customers/${values.customer_id}`);
 }
 
 export interface CompleteRentalActionState {
@@ -110,9 +110,9 @@ export async function completeRental(
     return { error: error.message };
   }
 
-  revalidatePath("/dashboard/rentals");
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath("/rentals");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
   return { success: true };
 }

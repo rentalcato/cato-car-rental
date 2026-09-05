@@ -51,7 +51,7 @@ export function ReservationTable({
               <TableCell>
                 {reservation.customer ? (
                   <Link
-                    href={`/dashboard/customers/${reservation.customer.id}`}
+                    href={`/customers/${reservation.customer.id}`}
                     className="hover:underline"
                   >
                     {reservation.customer.first_name} {reservation.customer.last_name}
@@ -63,7 +63,7 @@ export function ReservationTable({
               <TableCell>
                 {reservation.vehicle ? (
                   <Link
-                    href={`/dashboard/vehicles/${reservation.vehicle_id}`}
+                    href={`/vehicles/${reservation.vehicle_id}`}
                     className="hover:underline"
                   >
                     {reservation.vehicle.license_plate}

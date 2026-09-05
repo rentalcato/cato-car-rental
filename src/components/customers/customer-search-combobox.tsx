@@ -63,7 +63,7 @@ export function CustomerSearchCombobox({ onSelect }: { onSelect: (customer: Cust
             <div className="space-y-2 p-3">
               <p className="text-sm text-muted-foreground">No matching customers.</p>
               <Link
-                href="/dashboard/customers/new"
+                href="/customers/new"
                 target="_blank"
                 className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
               >

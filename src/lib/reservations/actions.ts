@@ -46,11 +46,11 @@ export async function createReservation(
     return { error: error?.message ?? "Could not create the reservation." };
   }
 
-  revalidatePath("/dashboard/reservations");
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${values.vehicle_id}`);
-  revalidatePath(`/dashboard/customers/${values.customer_id}`);
-  redirect(`/dashboard/customers/${values.customer_id}`);
+  revalidatePath("/reservations");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${values.vehicle_id}`);
+  revalidatePath(`/customers/${values.customer_id}`);
+  redirect(`/customers/${values.customer_id}`);
 }
 
 export interface ReservationRpcResult {
@@ -89,11 +89,11 @@ export async function checkInReservation(
     return { error: error.message };
   }
 
-  revalidatePath("/dashboard/reservations");
-  revalidatePath("/dashboard/rentals");
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath("/reservations");
+  revalidatePath("/rentals");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
   return {};
 }
 
@@ -115,9 +115,9 @@ export async function cancelReservation(
     return { error: error.message };
   }
 
-  revalidatePath("/dashboard/reservations");
-  revalidatePath("/dashboard/vehicles");
-  revalidatePath(`/dashboard/vehicles/${vehicleId}`);
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath("/reservations");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
   return {};
 }

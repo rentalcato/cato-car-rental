@@ -25,7 +25,7 @@ export function StatusSummaryCards({
         return (
           <Link
             key={status}
-            href={isActive ? "/dashboard/vehicles" : `/dashboard/vehicles?status=${status}`}
+            href={isActive ? "/vehicles" : `/vehicles?status=${status}`}
             aria-current={isActive ? "true" : undefined}
           >
             <Card

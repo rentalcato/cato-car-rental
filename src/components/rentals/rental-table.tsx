@@ -53,7 +53,7 @@ export function RentalTable({
               <TableCell>
                 {rental.customer ? (
                   <Link
-                    href={`/dashboard/customers/${rental.customer.id}`}
+                    href={`/customers/${rental.customer.id}`}
                     className="hover:underline"
                   >
                     {rental.customer.first_name} {rental.customer.last_name}
@@ -65,7 +65,7 @@ export function RentalTable({
               <TableCell>
                 {rental.vehicle ? (
                   <Link
-                    href={`/dashboard/vehicles/${rental.vehicle_id}`}
+                    href={`/vehicles/${rental.vehicle_id}`}
                     className="hover:underline"
                   >
                     {rental.vehicle.license_plate}

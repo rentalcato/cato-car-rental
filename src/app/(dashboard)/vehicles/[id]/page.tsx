@@ -69,7 +69,7 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
             <Button
               variant="outline"
               size="sm"
-              render={<Link href={`/dashboard/vehicles/${vehicle.id}/edit`} />}
+              render={<Link href={`/vehicles/${vehicle.id}/edit`} />}
             >
               <Pencil className="size-3.5" />
               Edit

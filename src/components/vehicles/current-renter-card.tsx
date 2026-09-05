@@ -46,7 +46,7 @@ export function CurrentRenterCard({ rental }: { rental: CurrentRentalInfo | null
             value={
               rental.customer ? (
                 <Link
-                  href={`/dashboard/customers/${rental.customer.id}`}
+                  href={`/customers/${rental.customer.id}`}
                   className="hover:underline"
                 >
                   {rental.customer.first_name} {rental.customer.last_name}

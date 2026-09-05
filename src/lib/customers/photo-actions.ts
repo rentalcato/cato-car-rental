@@ -62,6 +62,6 @@ export async function uploadCustomerPhoto(
     entityId: customerId,
   });
 
-  revalidatePath(`/dashboard/customers/${customerId}`);
+  revalidatePath(`/customers/${customerId}`);
   return { success: true };
 }

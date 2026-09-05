@@ -27,7 +27,7 @@ export function DuplicateWarning({ duplicates }: { duplicates: Customer[] }) {
         {duplicates.map((customer) => (
           <li key={customer.id}>
             <Link
-              href={`/dashboard/customers/${customer.id}`}
+              href={`/customers/${customer.id}`}
               target="_blank"
               className="font-medium underline underline-offset-2"
             >
