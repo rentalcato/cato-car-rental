@@ -5,8 +5,12 @@ role-aware dashboard shell. Phase 2 added fleet (vehicle) management.
 Phase 3 turns Customers into a full renter-profile system (documents,
 status/blacklist workflow, audit logging) and adds rental checkout, plus
 reservations (book now, check in later), rental completion (check-in/
-return), and a standalone Payments ledger. Maintenance and Reports are
-still open.
+return), a standalone Payments ledger, and Settings + Reports. Only
+Maintenance is still a placeholder.
+
+Deployed at https://cato-car-rental.vercel.app (source:
+https://github.com/rentalcato/cato-car-rental) — Vercel auto-deploys on
+every push to `master`.
 
 ## Stack
 
@@ -54,6 +58,8 @@ move to the next one):
    would double-book an active rental
 9. `0009_payments_module.sql` — `record_payment`, for recording a
    payment or refund independent of checkout/check-in/completion
+10. `0010_settings_and_reports_support.sql` — the `app_settings` singleton
+    table + the public `business-assets` bucket for the business logo
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -172,7 +178,7 @@ a vehicle's status back to Available/Reserved while it still has a
 matching open rental/reservation — the double-booking hole that not
 having a completion step had otherwise left open.
 
-**Payments** — a standalone ledger at `/dashboard/payments` (manager+
+**Payments** — a standalone ledger at `/payments` (manager+
 only, matching nav-config), independent of the payments already captured
 at checkout/check-in/completion: a "Payment" action on any Rentals-list
 row records a payment or refund against that rental at any time (e.g.
@@ -181,6 +187,27 @@ refunded). Refunds are just negative amounts in the same append-only
 `payments` ledger — shown with a "Refund" badge and parenthesized amount
 everywhere payment history is displayed.
 
+**Settings** (`/settings`, super_admin only) — business info + logo
+(public `business-assets` bucket), rental defaults (daily rate and
+security deposit pre-fill the Add Vehicle / New Rental / New Reservation
+forms; the rest — late fee, mileage, fuel policy — are stored for
+reference but not yet auto-applied anywhere), and Users & Roles (change
+an existing account's role, or deactivate/reactivate it — deactivating
+now actually signs that account out, since `profiles.is_active` is
+finally checked in `getCurrentUser()`). No new-account/invite flow —
+accounts are still created via the Supabase dashboard by design.
+Sidebar/topbar branding reads the business name + logo, falling back to
+the "Fleet Manager" default when unset. Currency/timezone are stored and
+editable but not yet threaded through the app's actual date/currency
+formatting.
+
+**Reports** (`/reports`, manager+) — revenue (today / this month /
+all-time, plus a 12-month trend chart), fleet utilization, per-vehicle
+revenue/maintenance-cost/profit, top customers by revenue, overdue
+rentals, average rental duration, and reservation-to-active conversion
+rate — all computed from live data (no fake numbers), no new tables
+beyond Settings' one.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
-reservation's vehicle/dates, maintenance, email notifications, reports,
-an audit-log viewer, Vercel deployment.
+reservation's vehicle/dates, maintenance, email notifications, an
+audit-log viewer, new-account/invite flow.
