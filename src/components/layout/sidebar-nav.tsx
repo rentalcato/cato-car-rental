@@ -23,18 +23,29 @@ export function SidebarNav({
 
   return (
     <div className="flex h-full flex-col">
+      {/* An uploaded logo is typically a full wordmark (name baked into the
+          graphic) — forcing it into the same size-6 box as the fallback
+          icon squashed it down to an unreadable sliver. It gets real
+          height instead, and replaces the text rather than being
+          shrunk to sit beside a redundant second copy of the name. */}
       <Link
         href="/dashboard"
         onClick={onNavigate}
-        className="flex items-center gap-2 px-4 py-4 text-lg font-semibold"
+        className="flex items-center gap-2 px-4 py-5 text-lg font-semibold"
       >
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="" className="size-6 shrink-0 object-contain" />
+          <img
+            src={logoUrl}
+            alt={businessName || "Fleet Manager"}
+            className="h-10 max-w-full shrink-0 object-contain"
+          />
         ) : (
-          <Car className="size-6 shrink-0" />
+          <>
+            <Car className="size-6 shrink-0" />
+            <span className="truncate">{businessName || "Fleet Manager"}</span>
+          </>
         )}
-        <span className="truncate">{businessName || "Fleet Manager"}</span>
       </Link>
       <nav className="flex-1 space-y-1 overflow-y-auto px-2">
         {items.map((item) => {
