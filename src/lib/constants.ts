@@ -82,6 +82,20 @@ export const DOCUMENT_TYPES = [
   "other",
 ] as const;
 
+/**
+ * Subset a customer can self-upload from /account (0019) — excludes
+ * rental_agreement/signed_document, which are staff-generated artifacts,
+ * not something a customer would proactively provide.
+ */
+export const CUSTOMER_UPLOADABLE_DOCUMENT_TYPES = [
+  "drivers_license_front",
+  "drivers_license_back",
+  "national_id",
+  "passport",
+  "proof_of_address",
+  "other",
+] as const;
+
 /** MIME types accepted for a customer document upload. */
 export const ALLOWED_DOCUMENT_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
 

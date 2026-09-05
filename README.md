@@ -109,6 +109,11 @@ move to the next one):
     written and `profiles`/`customers` both carry fields (role,
     is_active, status, license/ID) a customer must never touch
     themselves.
+19. `0019_customer_document_self_service.sql` — additive select/insert
+    policies (table and Storage) so a linked customer can upload and
+    view their own ID/license documents. Deleting one stays staff-only,
+    unchanged from 0006 — a customer adds a corrected upload rather
+    than removing one already on file.
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -383,8 +388,13 @@ the Customers screen. A linked customer's Payment History (amounts,
 dates, methods) shows below their bookings, reusing the same table
 component the staff-side customer profile uses.
 
+A linked customer can also upload their own ID/license documents
+(0019) — driver's license, national ID, passport, proof of address, or
+other; not the staff-generated types (rental agreement, signed
+document). They can add a corrected file if needed, but can't delete
+one already on file — that stays a staff-only action, same as viewing/
+managing a walk-in customer's documents from the Customers screen.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
-editing/deleting a maintenance or issue record once logged, and a
-customer uploading their own ID/license documents (still staff-only,
-from the Customers screen).
+and editing/deleting a maintenance or issue record once logged.

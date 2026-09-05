@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
 import { MyBookingsTable } from "@/components/account/my-bookings-table";
 import { EditDetailsDialog } from "@/components/account/edit-details-dialog";
+import { MyDocumentsPanel } from "@/components/account/my-documents-panel";
 import { CustomerPaymentHistoryTable } from "@/components/customers/customer-payment-history-table";
 import { getMyAccount, getMyBookings, getMyPayments } from "@/lib/account/queries";
+import { getCustomerDocuments } from "@/lib/customers/documents";
 import { getPublicBusinessInfo } from "@/lib/marketing/queries";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -54,9 +56,10 @@ export default async function AccountPage() {
   if (!account) return null;
 
   const { profile, customer } = account;
-  const [bookings, payments] = await Promise.all([
+  const [bookings, payments, documents] = await Promise.all([
     getMyBookings(customer?.id),
     getMyPayments(customer?.id),
+    customer ? getCustomerDocuments(customer.id) : Promise.resolve([]),
   ]);
 
   const firstName = (profile.full_name || "there").trim().split(/\s+/)[0];
@@ -147,6 +150,11 @@ export default async function AccountPage() {
               </div>
             </CardContent>
           </Card>
+
+          <div>
+            <h2 className="mb-2 text-lg font-semibold">Your Documents</h2>
+            <MyDocumentsPanel documents={documents} />
+          </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">

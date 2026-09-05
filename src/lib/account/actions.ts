@@ -4,7 +4,34 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit/log";
+import { DOCUMENT_BUCKET } from "@/lib/customers/documents";
+import {
+  ALLOWED_DOCUMENT_MIME_TYPES,
+  CUSTOMER_UPLOADABLE_DOCUMENT_TYPES,
+  MAX_DOCUMENT_SIZE_BYTES,
+} from "@/lib/constants";
 import { bookingFormSchema, contactFormSchema, fieldErrors, profileFormSchema } from "@/lib/account/schema";
+
+type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+/** Shared by every self-service action that needs the caller's own linked customer id. */
+async function getOwnCustomerId(
+  supabase: ServerSupabaseClient,
+  userId: string
+): Promise<{ customerId?: string; error?: string }> {
+  const { data, error } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("profile_id", userId)
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+  if (!data) {
+    return { error: "Your account isn't connected to a customer record yet — contact us to get set up first." };
+  }
+  return { customerId: data.id };
+}
 
 export interface BookingActionState {
   error?: string;
@@ -31,21 +58,11 @@ export async function requestReservation(
   }
 
   const supabase = await createClient();
-  const { data: customer, error: customerError } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("profile_id", userId)
-    .maybeSingle();
-
-  if (customerError) return { error: customerError.message };
-  if (!customer) {
-    return {
-      error: "Your account isn't connected to a customer record yet — contact us to get set up first.",
-    };
-  }
+  const { customerId, error: lookupError } = await getOwnCustomerId(supabase, userId);
+  if (lookupError || !customerId) return { error: lookupError };
 
   const { error } = await supabase.rpc("create_reservation", {
-    p_customer_id: customer.id,
+    p_customer_id: customerId,
     p_vehicle_id: vehicleId,
     p_rental_start: parsed.data.rental_start.toISOString(),
     p_duration_days: parsed.data.duration_days,
@@ -164,4 +181,133 @@ export async function updateMyDetails(
   }
 
   return { success: true };
+}
+
+export interface DocumentActionState {
+  error?: string;
+  success?: boolean;
+}
+
+function isCustomerUploadableDocumentType(
+  value: unknown
+): value is (typeof CUSTOMER_UPLOADABLE_DOCUMENT_TYPES)[number] {
+  return (
+    typeof value === "string" &&
+    (CUSTOMER_UPLOADABLE_DOCUMENT_TYPES as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * Self-service document upload — same storage path convention
+ * ("<customer_id>/<document_type>/<file>") and validation as the
+ * staff-side uploadCustomerDocument(), scoped to the caller's own
+ * linked customer record via customer_documents_insert_own and
+ * customer_documents_storage_insert_own (0019). Deleting a submitted
+ * document stays staff-only — this action has no delete counterpart.
+ */
+export async function uploadMyDocument(
+  _prevState: DocumentActionState,
+  formData: FormData
+): Promise<DocumentActionState> {
+  const { id: userId } = await requireUser();
+
+  const documentType = formData.get("document_type");
+  if (!isCustomerUploadableDocumentType(documentType)) {
+    return { error: "Select a document type." };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a file to upload." };
+  }
+  if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+    return { error: "File is too large — the limit is 10MB." };
+  }
+  if (!(ALLOWED_DOCUMENT_MIME_TYPES as readonly string[]).includes(file.type)) {
+    return { error: "Only JPG, PNG and PDF files are allowed." };
+  }
+
+  const expiryRaw = formData.get("expiry_date");
+  const expiryDate = typeof expiryRaw === "string" && expiryRaw ? expiryRaw : null;
+
+  const supabase = await createClient();
+  const { customerId, error: lookupError } = await getOwnCustomerId(supabase, userId);
+  if (lookupError || !customerId) return { error: lookupError };
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${customerId}/${documentType}/${crypto.randomUUID()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(DOCUMENT_BUCKET)
+    .upload(path, file, { contentType: file.type });
+
+  if (uploadError) {
+    return { error: `Upload failed: ${uploadError.message}` };
+  }
+
+  const { data, error: insertError } = await supabase
+    .from("customer_documents")
+    .insert({
+      customer_id: customerId,
+      document_type: documentType,
+      file_name: file.name,
+      storage_path: path,
+      uploaded_by: userId,
+      expiry_date: expiryDate,
+      notes: null,
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !data) {
+    await supabase.storage.from(DOCUMENT_BUCKET).remove([path]);
+    return { error: insertError?.message ?? "Could not save the document record." };
+  }
+
+  await logAudit({
+    actorId: userId,
+    action: "document_uploaded",
+    entityType: "customer",
+    entityId: customerId,
+    metadata: { document_id: data.id, document_type: documentType, file_name: file.name, self_service: true },
+  });
+
+  revalidatePath("/account");
+  return { success: true };
+}
+
+export interface SignedUrlResult {
+  url?: string;
+  error?: string;
+}
+
+/**
+ * Short-lived signed URL for viewing a document the customer uploaded
+ * themselves — looked up scoped to their own linked customer_id, not
+ * trusted from the client, matching getDocumentAccessUrl()'s pattern.
+ */
+export async function getMyDocumentAccessUrl(documentId: string): Promise<SignedUrlResult> {
+  const { id: userId } = await requireUser();
+
+  const supabase = await createClient();
+  const { customerId, error: lookupError } = await getOwnCustomerId(supabase, userId);
+  if (lookupError || !customerId) return { error: lookupError };
+
+  const { data: doc } = await supabase
+    .from("customer_documents")
+    .select("storage_path")
+    .eq("id", documentId)
+    .eq("customer_id", customerId)
+    .maybeSingle();
+  if (!doc) return { error: "Document not found." };
+
+  const { data, error } = await supabase.storage
+    .from(DOCUMENT_BUCKET)
+    .createSignedUrl(doc.storage_path, 60);
+
+  if (error || !data) {
+    return { error: error?.message ?? "Could not generate a link to this document." };
+  }
+
+  return { url: data.signedUrl };
 }
