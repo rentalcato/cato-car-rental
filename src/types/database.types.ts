@@ -10,6 +10,7 @@
  * `GenericTable` constraint and every table silently resolves to `never`.
  */
 import type {
+  BODY_TYPES,
   CUSTOMER_STATUSES,
   DOCUMENT_TYPES,
   FUEL_TYPES,
@@ -17,6 +18,7 @@ import type {
   ISSUE_STATUSES,
   PAYMENT_METHODS,
   RENTAL_STATUSES,
+  TRANSMISSION_TYPES,
   USER_ROLES,
   VEHICLE_STATUSES,
 } from "@/lib/constants";
@@ -27,6 +29,8 @@ export type RentalStatus = (typeof RENTAL_STATUSES)[number];
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 export type IssueSeverity = (typeof ISSUE_SEVERITIES)[number];
 export type FuelType = (typeof FUEL_TYPES)[number];
+export type TransmissionType = (typeof TRANSMISSION_TYPES)[number];
+export type BodyType = (typeof BODY_TYPES)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type CustomerStatus = (typeof CUSTOMER_STATUSES)[number];
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
@@ -52,6 +56,9 @@ export type Vehicle = {
   daily_rental_rate: number | null;
   current_mileage: number | null;
   fuel_type: FuelType | null;
+  seats: number | null;
+  transmission: TransmissionType | null;
+  body_type: BodyType | null;
   vehicle_status: VehicleStatus;
   notes: string | null;
   date_added: string;
@@ -231,6 +238,9 @@ export type PublicVehicleListing = {
   fuel_type: FuelType | null;
   website_display_order: number;
   photo_storage_path: string | null;
+  seats: number | null;
+  transmission: TransmissionType | null;
+  body_type: BodyType | null;
 };
 
 /** Read-only view (0012) — anon-readable subset of `app_settings`. */

@@ -2,14 +2,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { Users, Cog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { FleetSearch } from "@/components/account/fleet-search";
 import { getBookableVehicles } from "@/lib/marketing/queries";
 import { formatCurrency } from "@/lib/format";
 
 // AccountLayout already calls requireUser(). Same catalog as the public
 // homepage's fleet showcase (public_vehicle_listings, 0012/0013), just
 // unlimited and demo-free — a real booking screen, not a marketing one.
-export default async function AccountFleetPage() {
-  const vehicles = await getBookableVehicles();
+export default async function AccountFleetPage(props: PageProps<"/account/fleet">) {
+  const searchParams = await props.searchParams;
+  const search = typeof searchParams.search === "string" ? searchParams.search : "";
+  const vehicles = await getBookableVehicles(search);
 
   return (
     <div>
@@ -18,9 +21,15 @@ export default async function AccountFleetPage() {
         Pick a vehicle to see details and request a reservation.
       </p>
 
+      <div className="mt-4">
+        <FleetSearch defaultSearch={search} />
+      </div>
+
       {vehicles.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          Nothing available for booking right now — check back soon.
+          {search
+            ? `No vehicles match "${search}".`
+            : "Nothing available for booking right now — check back soon."}
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

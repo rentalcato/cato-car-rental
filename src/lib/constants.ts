@@ -36,6 +36,19 @@ export const FUEL_TYPES = [
   "other",
 ] as const;
 
+export const TRANSMISSION_TYPES = ["automatic", "manual", "other"] as const;
+
+export const BODY_TYPES = [
+  "sedan",
+  "suv",
+  "hatchback",
+  "coupe",
+  "convertible",
+  "van",
+  "truck",
+  "other",
+] as const;
+
 export const PAYMENT_METHODS = [
   "cash",
   "credit_card",

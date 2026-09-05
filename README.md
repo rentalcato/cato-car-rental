@@ -96,6 +96,10 @@ move to the next one):
     to only exist as hardcoded stock photos (shown on the public site
     whenever the fleet was empty) as real, removable rows instead —
     plate `DEMO-001` through `DEMO-004`. See "Vehicles" below.
+17. `0017_vehicle_specs.sql` — adds `vehicles.seats`/`transmission`/
+    `body_type` (all optional) and two new enums
+    (`transmission_type`, `body_type`), and updates
+    `public_vehicle_listings` to expose all three.
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -169,11 +173,18 @@ placeholder route for every module.
 **Phase 2** — Fleet management: list with search/status filters, add/edit,
 archive (soft delete) + restore, photo uploads, and a vehicle profile page
 with rental/maintenance/issue history. Add Vehicle also accepts photo(s)
-directly on that same form (optional) — no need to save first and add
-photos afterward on the profile page, though that still works too and is
-the only way to add more later. If the photo upload itself fails, the
-vehicle is still saved (never lost over a photo hiccup) and its profile
-page shows a banner pointing at the Photos tab to retry.
+directly on that same form (optional); Edit Vehicle has the same upload/
+delete photo gallery the profile page has, so photos can be managed from
+either place. If a photo upload on the Add form fails, the vehicle is
+still saved (never lost over a photo hiccup) and its profile page shows
+a banner pointing at the Photos tab to retry.
+
+A vehicle also optionally records seats, transmission (Automatic/
+Manual/Other) and body type (Sedan/SUV/Hatchback/Coupe/Convertible/Van/
+Truck/Other) (0017) — shown on its profile, in the vehicle form, and on
+the public/customer fleet pages in place of the old one-size-fits-all
+"5 seats, Automatic, Sedan / SUV" text. A vehicle that predates these
+fields just shows that same generic fallback until they're set.
 
 Four placeholder vehicles ship seeded in (0016, plate `DEMO-001`–`DEMO-004`,
 notes explain what they are) so the public site never launches looking
@@ -346,7 +357,9 @@ customer can also cancel their own pending reservation from
 page shows a "get connected first" message instead of a booking form.
 Checking a reservation in (handing over the actual vehicle) stays
 staff-only — that's an in-person, ID-verifying action, not something
-exposed over the web.
+exposed over the web. Browse Fleet has a search box (make/model only —
+this catalog never carries the license plate) for finding a specific
+vehicle in a larger fleet.
 
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,

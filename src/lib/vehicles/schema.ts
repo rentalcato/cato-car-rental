@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FUEL_TYPES, VEHICLE_STATUSES } from "@/lib/constants";
+import { BODY_TYPES, FUEL_TYPES, TRANSMISSION_TYPES, VEHICLE_STATUSES } from "@/lib/constants";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -37,6 +37,12 @@ export const vehicleFormSchema = z.object({
     z.coerce.number().int().min(0, { error: "Mileage can't be negative." }).optional()
   ),
   fuel_type: z.preprocess(emptyToUndefined, z.enum(FUEL_TYPES).optional()),
+  seats: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().min(1, { error: "Seats must be at least 1." }).max(60).optional()
+  ),
+  transmission: z.preprocess(emptyToUndefined, z.enum(TRANSMISSION_TYPES).optional()),
+  body_type: z.preprocess(emptyToUndefined, z.enum(BODY_TYPES).optional()),
   vehicle_status: z.enum(VEHICLE_STATUSES, { error: "Select a status." }),
   notes: z.preprocess(emptyToUndefined, z.string().trim().max(2000).optional()),
 });

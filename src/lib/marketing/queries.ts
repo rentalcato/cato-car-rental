@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { LOGO_BUCKET } from "@/lib/settings/queries";
+import { BODY_TYPE_LABELS, TRANSMISSION_LABELS } from "@/lib/vehicles/labels";
 import type { PublicBusinessInfo, PublicVehicleListing } from "@/types/database.types";
 
 const VEHICLE_PHOTO_BUCKET = "vehicle-photos";
@@ -92,14 +93,23 @@ function assignFallbackImage(id: string): string {
 }
 
 function toFleetCard(v: PublicVehicleListing, storagePublicUrl: (path: string) => string): FleetCard {
+  // Real values when a vehicle has them set (Vehicles -> Add/Edit); a
+  // sensible generic fallback otherwise so older vehicles that predate
+  // these fields (0017) still display something reasonable.
+  const category = v.body_type
+    ? BODY_TYPE_LABELS[v.body_type]
+    : v.fuel_type === "electric"
+      ? "Electric"
+      : "Sedan / SUV";
+
   return {
     id: v.id,
     make: v.make || "Vehicle",
     model: v.model || "",
     year: v.year,
-    category: v.fuel_type === "electric" ? "Electric" : "Sedan / SUV",
-    seats: 5,
-    transmission: "Automatic",
+    category,
+    seats: v.seats ?? 5,
+    transmission: v.transmission ? TRANSMISSION_LABELS[v.transmission] : "Automatic",
     dailyRate: v.daily_rental_rate,
     imageUrl: v.photo_storage_path ? storagePublicUrl(v.photo_storage_path) : assignFallbackImage(v.id),
     isDemo: false,
@@ -137,12 +147,21 @@ export async function getFleetShowcase(): Promise<FleetCard[]> {
  * no .limit(8) (that cap is a homepage-hero concern, not a real
  * catalog) and no demo-fallback (an authenticated booking screen says
  * "nothing available" plainly, never shows fake cars to book).
+ *
+ * `search` matches make/model only — this view never exposes the
+ * license plate (that's still internal-only), unlike the staff-side
+ * vehicle search in lib/vehicles/queries.ts.
  */
-export async function getBookableVehicles(): Promise<FleetCard[]> {
+export async function getBookableVehicles(search?: string): Promise<FleetCard[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("public_vehicle_listings")
-    .select("*")
+  let query = supabase.from("public_vehicle_listings").select("*");
+
+  if (search?.trim()) {
+    const term = search.trim().replace(/[%,]/g, "");
+    query = query.or(`make.ilike.%${term}%,model.ilike.%${term}%`);
+  }
+
+  const { data, error } = await query
     .order("website_display_order", { ascending: true })
     .order("daily_rental_rate", { ascending: true });
 

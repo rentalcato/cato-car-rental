@@ -12,18 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FUEL_TYPES, VEHICLE_STATUSES } from "@/lib/constants";
+import { BODY_TYPES, FUEL_TYPES, TRANSMISSION_TYPES, VEHICLE_STATUSES } from "@/lib/constants";
 import { VEHICLE_STATUS_CONFIG } from "@/components/vehicles/status-badge";
+import { BODY_TYPE_LABELS, FUEL_TYPE_LABELS, TRANSMISSION_LABELS } from "@/lib/vehicles/labels";
 import type { VehicleActionState } from "@/lib/vehicles/actions";
 import type { Vehicle } from "@/types/database.types";
-
-const FUEL_TYPE_LABELS: Record<(typeof FUEL_TYPES)[number], string> = {
-  gasoline: "Gasoline",
-  diesel: "Diesel",
-  hybrid: "Hybrid",
-  electric: "Electric",
-  other: "Other",
-};
 
 const initialState: VehicleActionState = {};
 
@@ -161,6 +154,60 @@ export function VehicleForm({
             </SelectContent>
           </Select>
           <FieldError errors={errors.fuel_type} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="seats">Seats</Label>
+          <Input
+            id="seats"
+            name="seats"
+            type="number"
+            inputMode="numeric"
+            min="1"
+            max="60"
+            defaultValue={field("seats")}
+          />
+          <FieldError errors={errors.seats} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="transmission">Transmission</Label>
+          <Select
+            name="transmission"
+            defaultValue={values?.transmission || defaultValues?.transmission || undefined}
+          >
+            <SelectTrigger id="transmission" className="w-full">
+              <SelectValue placeholder="Select transmission" />
+            </SelectTrigger>
+            <SelectContent>
+              {TRANSMISSION_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {TRANSMISSION_LABELS[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError errors={errors.transmission} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="body_type">Body type</Label>
+          <Select
+            name="body_type"
+            defaultValue={values?.body_type || defaultValues?.body_type || undefined}
+          >
+            <SelectTrigger id="body_type" className="w-full">
+              <SelectValue placeholder="Select body type" />
+            </SelectTrigger>
+            <SelectContent>
+              {BODY_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {BODY_TYPE_LABELS[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError errors={errors.body_type} />
         </div>
 
         <div className="space-y-2">

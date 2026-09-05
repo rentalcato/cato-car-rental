@@ -18,6 +18,7 @@ import { IssueHistoryTable } from "@/components/vehicles/issue-history-table";
 import { requireRole } from "@/lib/auth/dal";
 import { canAccess } from "@/lib/auth/roles";
 import { getVehicleProfile } from "@/lib/vehicles/queries";
+import { BODY_TYPE_LABELS, FUEL_TYPE_LABELS, TRANSMISSION_LABELS } from "@/lib/vehicles/labels";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 
 function DetailItem({ label, value }: { label: string; value: string | null | undefined }) {
@@ -144,7 +145,13 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
             <CardContent className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2 md:grid-cols-3">
               <DetailItem label="Colour" value={vehicle.colour} />
               <DetailItem label="VIN / Chassis Number" value={vehicle.vin} />
-              <DetailItem label="Fuel Type" value={vehicle.fuel_type} />
+              <DetailItem label="Fuel Type" value={vehicle.fuel_type ? FUEL_TYPE_LABELS[vehicle.fuel_type] : null} />
+              <DetailItem label="Seats" value={vehicle.seats ? String(vehicle.seats) : null} />
+              <DetailItem
+                label="Transmission"
+                value={vehicle.transmission ? TRANSMISSION_LABELS[vehicle.transmission] : null}
+              />
+              <DetailItem label="Body Type" value={vehicle.body_type ? BODY_TYPE_LABELS[vehicle.body_type] : null} />
               <DetailItem label="Current Mileage" value={formatNumber(vehicle.current_mileage)} />
               <DetailItem label="Date Added" value={formatDate(vehicle.date_added)} />
               <DetailItem label="Daily Rate" value={formatCurrency(vehicle.daily_rental_rate)} />
