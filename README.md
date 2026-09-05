@@ -7,7 +7,8 @@ status/blacklist workflow, audit logging) and adds rental checkout, plus
 reservations (book now, check in later), rental completion (check-in/
 return), a standalone Payments ledger, Settings + Reports, and
 Maintenance & Issues. Every sidebar page now has real functionality —
-nothing left is a placeholder.
+nothing left is a placeholder. A public marketing homepage + real
+self-service sign-up now sit in front of the internal dashboard.
 
 Deployed at https://cato-car-rental.vercel.app (source:
 https://github.com/rentalcato/cato-car-rental) — Vercel auto-deploys on
@@ -64,30 +65,40 @@ move to the next one):
 11. `0011_maintenance_and_issues.sql` — receipt/photo attachment columns,
     the new `damaged` vehicle status, and the private
     `maintenance-attachments` bucket
+12. `0012_public_signup.sql` — the new `customer` role (see below), and
+    two read-only views (`public_vehicle_listings`,
+    `public_business_info`) that let the public homepage show real
+    fleet/business data without loosening any existing RLS policy
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
 `rentals`, `payments`, `vehicle_issues`, `maintenance`, all with the RLS
 shield icon "on", and **Storage** should show `vehicle-photos`,
-`customer-photos` (both public) and `customer-documents` (private).
+`customer-photos`, `business-assets` (all public), and
+`customer-documents`, `maintenance-attachments` (both private).
 
 ## 4. Create your first user (Super Admin)
 
-There's no public sign-up page on purpose — this is an internal tool.
+There's a public sign-up page now (`/signup`) — but it's for customers, not
+staff. Every brand-new profile, whether self-signed-up or created via the
+Supabase dashboard, defaults to the `customer` role, which has **no**
+dashboard access at all (enforced by not appearing in any
+`requireRole([...])` check anywhere in the app — see 0012's comments). You
+promote a trusted account to actual staff access after it exists:
 
-1. Supabase dashboard → **Authentication → Users → Add user**. Create a
-   user with an email + password you'll use to log in.
-2. This automatically creates a matching row in `public.profiles` with
-   `role = 'staff'` (via the `handle_new_user` trigger). Promote it to
-   Super Admin by running this in the SQL Editor:
+1. Supabase dashboard → **Authentication → Users → Add user** (or have them
+   sign up at `/signup` themselves). This creates a matching
+   `public.profiles` row with `role = 'customer'`.
+2. Promote the very first account to Super Admin — this one step still needs
+   SQL, since there's no admin yet to do it from the UI:
 
    ```sql
    update public.profiles set role = 'super_admin' where email = 'you@example.com';
    ```
-
-Repeat step 1 (with a different role assigned via the same `update`
-statement) to create test `manager` and `staff` accounts if you want to see
-how navigation/permissions differ per role.
+3. From then on, promote everyone else from the app itself: sign in as that
+   Super Admin → **Settings → Users & Roles** → change their role to
+   `staff`/`manager`/`super_admin` as appropriate. No more manual SQL needed
+   for day-to-day onboarding.
 
 ## 5. Run the app
 
@@ -106,6 +117,7 @@ with the Super Admin account you created above.
 | super_admin | Everything, including changing a customer's status and hard-deleting a customer record (rarely needed — see Data Retention below) |
 | manager     | Everything staff can, plus: change a customer's status (Active/Restricted/Blacklisted/Inactive), override a blacklist restriction at checkout/reservation check-in, delete a customer document, manage vehicles, view/manage payments and maintenance |
 | staff       | Create/edit vehicles and customers, upload customer documents, search customers, check a customer out (create a rental) and complete/return it, and book/check-in/cancel reservations — see `src/components/layout/nav-config.ts` and `supabase/migrations/0003_rls_policies.sql`/`0006_phase3_customer_rental_management.sql`/`0007_reservations.sql`/`0008_rental_completion_and_fixes.sql`. Cannot change a customer's status, delete a document, or record a standalone payment/refund (Payments stays manager+ only). |
+| customer    | **No dashboard access at all.** The default role for every brand-new profile (0012) — public sign-up or admin-created. Can only read their own `profiles` row. An admin promotes a real account to one of the roles above from Settings → Users & Roles. |
 
 ## Data retention
 
@@ -229,7 +241,24 @@ placeholder page, now two tabs:
   open rental (same 0008 trigger as everywhere else). No staff
   access to any of this, matching the existing nav-config gate.
 
+**Public site** (`/`, no auth) — a real marketing homepage instead of the
+old unconditional redirect to `/dashboard`: hero (Mercedes-AMG C63S,
+`next/image`-optimized, the one place in the app that isn't a plain
+`<img>` against Supabase Storage), fleet showcase (real available
+vehicles with real prices when the fleet has any — including a real
+uploaded photo if one exists — falling back to four curated demo cards
+otherwise, one of which is a second Mercedes-Benz), why-choose-us,
+how-it-works, an about section, and a footer sourced from Settings'
+business info. Real fleet/business data is served through two new
+read-only views rather than loosening any RLS policy on
+`vehicles`/`vehicle_photos`/`app_settings` (see `Roles` above for the
+`customer` role this also introduces). "Browse Vehicles"/"Reserve a
+Vehicle" scroll to the fleet section — no fake public booking flow.
+`/login` and `/signup` are real, unauthenticated pages; every dashboard
+route is exactly as protected as before.
+
 **Not built yet**: reservation no-show/auto-expiry, editing a booked
 reservation's vehicle/dates, email notifications, an audit-log viewer,
-new-account/invite flow, editing/deleting a maintenance or issue record
-once logged.
+editing/deleting a maintenance or issue record once logged, a real
+customer-facing account area (a signed-up `customer` has an account but
+no in-app page of their own yet beyond the marketing site).
