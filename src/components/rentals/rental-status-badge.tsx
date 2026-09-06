@@ -10,7 +10,16 @@ export const RENTAL_STATUS_CONFIG: Record<RentalStatus, { label: string; color: 
   cancelled: { label: "Cancelled", color: "#8a8a8a" },
 };
 
-export function RentalStatusBadge({ status, className }: { status: RentalStatus; className?: string }) {
+export function RentalStatusBadge({
+  status,
+  className,
+  label,
+}: {
+  status: RentalStatus;
+  className?: string;
+  /** Overrides the default label text for this one badge — e.g. the customer account area shows "reserved" as "Pending Reservation". */
+  label?: string;
+}) {
   const config = RENTAL_STATUS_CONFIG[status];
   return (
     <Badge variant="secondary" className={cn("gap-1.5 font-medium", className)}>
@@ -19,7 +28,7 @@ export function RentalStatusBadge({ status, className }: { status: RentalStatus;
         style={{ backgroundColor: config.color }}
         aria-hidden
       />
-      {config.label}
+      {label ?? config.label}
     </Badge>
   );
 }

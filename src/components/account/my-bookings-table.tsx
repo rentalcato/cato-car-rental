@@ -71,7 +71,10 @@ export function MyBookingsTable({ bookings }: { bookings: MyBookingRow[] }) {
               <TableCell>{formatDate(booking.rental_start_datetime)}</TableCell>
               <TableCell>{formatDate(booking.expected_return_datetime)}</TableCell>
               <TableCell>
-                <RentalStatusBadge status={booking.rental_status} />
+                <RentalStatusBadge
+                  status={booking.rental_status}
+                  label={booking.rental_status === "reserved" ? "Pending Reservation" : undefined}
+                />
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {formatCurrency(booking.balance_due)}

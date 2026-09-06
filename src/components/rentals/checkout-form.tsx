@@ -61,12 +61,15 @@ export function CheckoutForm({
 
   const [customer, setCustomer] = useState<Customer | null>(initialCustomer);
   const [vehicleId, setVehicleId] = useState<string>("");
-  const [durationDays, setDurationDays] = useState(1);
+  // "" as an intermediate state fixes a real bug: falling back to 1 on
+  // every keystroke that clears the field made it impossible to type any
+  // number that doesn't start with "1" — see reservation-form.tsx.
+  const [durationDays, setDurationDays] = useState<number | "">(1);
   const [rentalStart, setRentalStart] = useState(() => toLocalDateTimeInputValue(new Date()));
 
   const selectedVehicle = vehicles.find((v) => v.id === vehicleId) ?? null;
   const estimatedTotal = useMemo(
-    () => (selectedVehicle?.daily_rental_rate ?? 0) * durationDays,
+    () => (selectedVehicle?.daily_rental_rate ?? 0) * (durationDays || 0),
     [selectedVehicle, durationDays]
   );
   const estimatedReturn = useMemo(() => {
@@ -74,7 +77,7 @@ export function CheckoutForm({
     const start = new Date(rentalStart);
     if (Number.isNaN(start.getTime())) return null;
     const end = new Date(start);
-    end.setDate(end.getDate() + durationDays);
+    end.setDate(end.getDate() + (durationDays || 0));
     return end;
   }, [rentalStart, durationDays]);
 
@@ -212,7 +215,10 @@ export function CheckoutForm({
               min={1}
               max={365}
               value={durationDays}
-              onChange={(event) => setDurationDays(Number(event.target.value) || 1)}
+              onChange={(event) => {
+                const raw = event.target.value;
+                setDurationDays(raw === "" ? "" : Number(raw));
+              }}
               required
             />
             <FieldError errors={errors.duration_days} />

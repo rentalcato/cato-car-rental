@@ -120,7 +120,10 @@ export default async function AccountPage() {
                     {formatDate(highlightTrip.expected_return_datetime)}
                   </p>
                 </div>
-                <RentalStatusBadge status={highlightTrip.rental_status} />
+                <RentalStatusBadge
+                  status={highlightTrip.rental_status}
+                  label={highlightTrip.rental_status === "reserved" ? "Pending Reservation" : undefined}
+                />
               </CardContent>
             </Card>
           ) : null}

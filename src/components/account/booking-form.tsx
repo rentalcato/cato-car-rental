@@ -35,14 +35,20 @@ export function BookingForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
 
-  const [durationDays, setDurationDays] = useState(1);
+  // "" as an intermediate state fixes a real bug: falling back to 1 on
+  // every keystroke that clears the field made it impossible to type any
+  // number that doesn't start with "1" — see reservation-form.tsx.
+  const [durationDays, setDurationDays] = useState<number | "">(1);
   const [rentalStart, setRentalStart] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return toLocalDateTimeInputValue(tomorrow);
   });
 
-  const estimatedTotal = useMemo(() => (dailyRate ?? 0) * durationDays, [dailyRate, durationDays]);
+  const estimatedTotal = useMemo(
+    () => (dailyRate ?? 0) * (durationDays || 0),
+    [dailyRate, durationDays]
+  );
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
@@ -74,7 +80,10 @@ export function BookingForm({
             min={1}
             max={365}
             value={durationDays}
-            onChange={(event) => setDurationDays(Number(event.target.value) || 1)}
+            onChange={(event) => {
+              const raw = event.target.value;
+              setDurationDays(raw === "" ? "" : Number(raw));
+            }}
             required
           />
           <FieldError errors={errors.duration_days} />
