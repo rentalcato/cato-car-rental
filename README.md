@@ -190,6 +190,17 @@ Supabase Auth with 3 roles + Row Level Security, a responsive protected
 dashboard shell (desktop sidebar / mobile drawer), and a role-gated
 placeholder route for every module.
 
+`/dashboard`'s four KPI cards (Vehicles, Active Rentals, a third
+card, Overdue Rentals) are real now, not the original "Live data
+arrives in a later phase" placeholder — each is a real count
+(`lib/dashboard/queries.ts`, a small purpose-built query, not the
+heavier full Reports computation) and links through to the relevant
+filtered list. The third card is **role-aware**: Revenue (this month)
+for manager+, matching that Revenue is manager+-only everywhere else
+(the Reports page itself); a plain staff account sees **Pending
+Reservations** in that slot instead — an equally actionable number
+(Accept/Deny, 0020) that isn't financial data.
+
 **Phase 2** — Fleet management: list with search/status filters, add/edit,
 archive (soft delete) + restore, **permanent delete**, photo uploads, and
 a vehicle profile page with rental/maintenance/issue history. Add Vehicle
