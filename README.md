@@ -185,13 +185,22 @@ dashboard shell (desktop sidebar / mobile drawer), and a role-gated
 placeholder route for every module.
 
 **Phase 2** — Fleet management: list with search/status filters, add/edit,
-archive (soft delete) + restore, photo uploads, and a vehicle profile page
-with rental/maintenance/issue history. Add Vehicle also accepts photo(s)
-directly on that same form (optional); Edit Vehicle has the same upload/
-delete photo gallery the profile page has, so photos can be managed from
-either place. If a photo upload on the Add form fails, the vehicle is
-still saved (never lost over a photo hiccup) and its profile page shows
-a banner pointing at the Photos tab to retry.
+archive (soft delete) + restore, **permanent delete**, photo uploads, and
+a vehicle profile page with rental/maintenance/issue history. Add Vehicle
+also accepts photo(s) directly on that same form (optional); Edit Vehicle
+has the same upload/delete photo gallery the profile page has, so photos
+can be managed from either place. If a photo upload on the Add form
+fails, the vehicle is still saved (never lost over a photo hiccup) and
+its profile page shows a banner pointing at the Photos tab to retry.
+
+**Delete** (vehicle profile page, manager+) is separate from Archive —
+Archive just hides a vehicle from the active fleet while keeping every
+record, fully reversible; Delete removes it for good, including its
+photos and maintenance/issue history, and can't be undone. The database
+itself refuses to delete a vehicle with any rental or reservation
+history (`rentals.vehicle_id` is `on delete restrict`) — the dialog
+surfaces that as a clear message pointing at Archive instead of a raw
+database error.
 
 A vehicle also optionally records seats, transmission (Automatic/
 Manual/Other) and body type (Sedan/SUV/Hatchback/Coupe/Convertible/Van/

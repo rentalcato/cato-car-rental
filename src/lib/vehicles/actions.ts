@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit/log";
 import { dailyRateSchema, fieldErrors, vehicleFormSchema } from "@/lib/vehicles/schema";
 import { isLicensePlateTaken } from "@/lib/vehicles/queries";
 
@@ -219,6 +220,68 @@ export async function restoreVehicle(vehicleId: string): Promise<VehicleMutation
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${vehicleId}`);
   return {};
+}
+
+export interface DeleteVehicleResult {
+  error?: string;
+  success?: boolean;
+}
+
+/**
+ * Permanently removes a vehicle — distinct from archiveVehicle(), which
+ * just hides it while keeping every record intact. rentals.vehicle_id is
+ * "on delete restrict" (0001), so the database itself refuses this if
+ * the vehicle has any rental or reservation history at all; that's
+ * surfaced here as a clear message pointing at Archive instead, rather
+ * than a raw constraint error. vehicle_issues/maintenance/vehicle_photos
+ * all cascade-delete with the vehicle (existing schema, unchanged) —
+ * the confirmation dialog warns about that before this ever runs.
+ */
+export async function deleteVehicle(vehicleId: string): Promise<DeleteVehicleResult> {
+  const { id: userId } = await requireRole(FLEET_MANAGERS);
+
+  const supabase = await createClient();
+
+  // Photo storage_paths are metadata cascade-deleted with the vehicle,
+  // but the actual files in Storage are not — collected first so they
+  // can be cleaned up after a successful delete.
+  const { data: photos } = await supabase
+    .from("vehicle_photos")
+    .select("storage_path")
+    .eq("vehicle_id", vehicleId);
+
+  const { error, data } = await supabase
+    .from("vehicles")
+    .delete()
+    .eq("id", vehicleId)
+    .select("license_plate")
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error:
+          "This vehicle has rental or reservation history and can't be deleted. Archive it instead to remove it from the active fleet without losing that history.",
+      };
+    }
+    return { error: dbErrorMessage(error) };
+  }
+  if (!data) return { error: "Vehicle not found." };
+
+  if (photos?.length) {
+    await supabase.storage.from(PHOTO_BUCKET).remove(photos.map((p) => p.storage_path));
+  }
+
+  await logAudit({
+    actorId: userId,
+    action: "vehicle_deleted",
+    entityType: "vehicle",
+    entityId: vehicleId,
+    entityLabel: data.license_plate,
+  });
+
+  revalidatePath("/vehicles");
+  return { success: true };
 }
 
 export async function uploadVehiclePhotos(

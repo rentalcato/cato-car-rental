@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VehicleStatusBadge } from "@/components/vehicles/status-badge";
 import { DailyRateDialog } from "@/components/vehicles/daily-rate-dialog";
 import { ArchiveVehicleDialog } from "@/components/vehicles/archive-vehicle-dialog";
+import { DeleteVehicleDialog } from "@/components/vehicles/delete-vehicle-dialog";
 import { ReturnToServiceButton } from "@/components/vehicles/return-to-service-button";
 import { PhotoGallery } from "@/components/vehicles/photo-gallery";
 import { CurrentRenterCard } from "@/components/vehicles/current-renter-card";
@@ -106,6 +107,7 @@ export default async function VehicleProfilePage(props: PageProps<"/vehicles/[id
               licensePlate={vehicle.license_plate}
               isArchived={Boolean(vehicle.archived_at)}
             />
+            <DeleteVehicleDialog vehicleId={vehicle.id} licensePlate={vehicle.license_plate} />
             {vehicle.vehicle_status === "maintenance" || vehicle.vehicle_status === "damaged" ? (
               <ReturnToServiceButton vehicleId={vehicle.id} />
             ) : null}
