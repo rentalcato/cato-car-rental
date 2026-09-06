@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MessageSquareText } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -50,7 +51,18 @@ export function ReservationTable({
         <TableBody>
           {reservations.map((reservation) => (
             <TableRow key={reservation.id}>
-              <TableCell className="font-medium">{reservation.rental_number}</TableCell>
+              <TableCell className="font-medium">
+                {reservation.rental_number}
+                {reservation.notes ? (
+                  <p
+                    className="mt-0.5 flex max-w-48 items-start gap-1 text-xs font-normal text-wrap text-muted-foreground"
+                    title={reservation.notes}
+                  >
+                    <MessageSquareText className="mt-0.5 size-3 shrink-0" />
+                    <span className="line-clamp-2">{reservation.notes}</span>
+                  </p>
+                ) : null}
+              </TableCell>
               <TableCell>
                 {reservation.customer ? (
                   <Link
