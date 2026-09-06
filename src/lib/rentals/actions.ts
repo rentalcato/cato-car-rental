@@ -62,6 +62,8 @@ export async function checkoutRental(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${values.vehicle_id}`);
   revalidatePath(`/customers/${values.customer_id}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${values.vehicle_id}`);
   redirect(`/customers/${values.customer_id}`);
 }
 
@@ -114,5 +116,7 @@ export async function completeRental(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${vehicleId}`);
   return { success: true };
 }

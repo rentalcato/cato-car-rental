@@ -53,5 +53,6 @@ export async function recordPayment(
   revalidatePath("/rentals");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
   return { success: true };
 }

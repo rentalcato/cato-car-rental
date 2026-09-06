@@ -50,6 +50,8 @@ export async function createReservation(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${values.vehicle_id}`);
   revalidatePath(`/customers/${values.customer_id}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${values.vehicle_id}`);
   redirect(`/customers/${values.customer_id}`);
 }
 
@@ -94,6 +96,8 @@ export async function checkInReservation(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${vehicleId}`);
   return {};
 }
 
@@ -119,6 +123,8 @@ export async function cancelReservation(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${vehicleId}`);
   return {};
 }
 
@@ -140,6 +146,8 @@ export async function approveReservation(
   revalidatePath("/reservations");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${vehicleId}`);
   return {};
 }
 
@@ -166,5 +174,7 @@ export async function denyReservation(
   revalidatePath("/vehicles");
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/account");
+  revalidatePath(`/account/fleet/${vehicleId}`);
   return {};
 }
