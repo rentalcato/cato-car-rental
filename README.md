@@ -365,10 +365,16 @@ isn't explicitly allowed.
 `customer` login actually lands now instead of `/unauthorized`: their
 profile (name/email, read-only — self profile editing isn't built yet),
 and, once staff link their account to a real `customers` record, their
-real booking history (0014). Linking happens from **Customers → a
-customer's profile → Overview tab → "Website Account"** (manager+ only,
-by the account's email) — unlinked customers see a "not linked yet"
-message with the business's contact info instead of any booking data.
+real booking history (0014). Linking (manager+ only, by the account's
+email) happens either right on the **Add/Edit Customer** form itself
+("Website Account" field) or, for a customer created before this
+existed, from **Customers → that customer's profile → Overview tab →
+"Website Account"** — both are the same underlying link/unlink, just
+two places to reach it. A non-matching email on the form doesn't block
+saving the rest of the customer's details — it saves normally with a
+banner pointing back at the Overview tab's box to try again. Unlinked
+customers see a "not linked yet" message with the business's contact
+info instead of any booking data.
 `/login` and the post-sign-in redirect both send a `customer` to
 `/account` rather than `/dashboard` automatically; an explicit deep
 link (e.g. bounced off a specific protected page) is still honored as

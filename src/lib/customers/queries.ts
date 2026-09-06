@@ -18,6 +18,14 @@ export interface LinkedAccount {
   full_name: string | null;
 }
 
+/** Just the email, for pre-filling the Edit Customer form's Website Account field. */
+export async function getLinkedAccountEmail(profileId: string | null): Promise<string | null> {
+  if (!profileId) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select("email").eq("id", profileId).maybeSingle();
+  return data?.email ?? null;
+}
+
 export interface CustomerListFilters {
   search?: string;
   status?: CustomerStatus | "all";

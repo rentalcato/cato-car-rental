@@ -41,6 +41,55 @@ function dbErrorMessage(error: { code?: string; message: string }): string {
   return error.message;
 }
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Shared by createCustomer/updateCustomer's "Website Account" field and
+ * the standalone linkCustomerAccount() below — same lookup/link logic
+ * either way. Deliberately non-fatal here: a bad or non-matching email
+ * shouldn't block saving the customer's actual details, so this only
+ * ever returns whether it succeeded, never an error the caller must
+ * surface as a blocking failure. The standalone action still returns a
+ * real error, since linking is the *only* thing that action does.
+ */
+async function applyAccountLink(
+  supabase: SupabaseServerClient,
+  customerId: string,
+  rawEmail: string,
+  actorId: string
+): Promise<{ warning?: boolean }> {
+  const email = rawEmail.trim();
+
+  if (!email) {
+    await supabase.from("customers").update({ profile_id: null }).eq("id", customerId);
+    return {};
+  }
+
+  const { data: matchedProfile } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .ilike("email", email)
+    .eq("role", "customer")
+    .maybeSingle();
+
+  if (!matchedProfile) return { warning: true };
+
+  const { error } = await supabase
+    .from("customers")
+    .update({ profile_id: matchedProfile.id })
+    .eq("id", customerId);
+  if (error) return { warning: true };
+
+  await logAudit({
+    actorId,
+    action: "customer_account_linked",
+    entityType: "customer",
+    entityId: customerId,
+    metadata: { email: matchedProfile.email },
+  });
+  return {};
+}
+
 export async function createCustomer(
   _prevState: CustomerActionState,
   formData: FormData
@@ -92,8 +141,15 @@ export async function createCustomer(
     entityLabel: `${parsed.data.first_name} ${parsed.data.last_name}`,
   });
 
+  const accountEmail = formData.get("website_account_email");
+  let linkWarning = false;
+  if (typeof accountEmail === "string" && accountEmail.trim()) {
+    const result = await applyAccountLink(supabase, data.id, accountEmail, userId);
+    linkWarning = Boolean(result.warning);
+  }
+
   revalidatePath("/customers");
-  redirect(`/customers/${data.id}`);
+  redirect(`/customers/${data.id}${linkWarning ? "?linkWarning=1" : ""}`);
 }
 
 export async function updateCustomer(
@@ -134,9 +190,16 @@ export async function updateCustomer(
     entityLabel: `${parsed.data.first_name} ${parsed.data.last_name}`,
   });
 
+  let linkWarning = false;
+  const accountEmail = formData.get("website_account_email");
+  if (typeof accountEmail === "string") {
+    const result = await applyAccountLink(supabase, customerId, accountEmail, userId);
+    linkWarning = Boolean(result.warning);
+  }
+
   revalidatePath("/customers");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/customers/${customerId}`);
+  redirect(`/customers/${customerId}${linkWarning ? "?linkWarning=1" : ""}`);
 }
 
 export interface StatusActionState {

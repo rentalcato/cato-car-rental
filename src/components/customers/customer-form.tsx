@@ -49,10 +49,16 @@ export function CustomerForm({
   action,
   defaultValues,
   submitLabel,
+  canManageAccountLink,
+  linkedAccountEmail,
 }: {
   action: (prevState: CustomerActionState, formData: FormData) => Promise<CustomerActionState>;
   defaultValues?: Partial<Customer>;
   submitLabel: string;
+  /** Website Account field only shows for manager+ — matches customers_write RLS (super_admin/manager only). */
+  canManageAccountLink?: boolean;
+  /** Pre-fills the field on Edit when already linked; irrelevant (and omitted) on Add. */
+  linkedAccountEmail?: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
@@ -65,6 +71,7 @@ export function CustomerForm({
     const dv = defaultValues?.[name];
     return dv === null || dv === undefined ? "" : String(dv);
   }
+  const accountEmailValue = values?.website_account_email ?? linkedAccountEmail ?? "";
 
   return (
     <form action={formAction} className="space-y-8" noValidate>
@@ -239,6 +246,29 @@ export function CustomerForm({
           </Field>
         </div>
       </section>
+
+      {canManageAccountLink ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold">Website Account</h3>
+          <div className="space-y-2">
+            <Label htmlFor="website_account_email">
+              Connect to their online account (optional)
+            </Label>
+            <Input
+              id="website_account_email"
+              name="website_account_email"
+              type="email"
+              placeholder="the email they signed up with"
+              defaultValue={accountEmailValue}
+            />
+            <p className="text-xs text-muted-foreground">
+              If they&apos;ve signed up on the website with this email, this connects their login
+              to this customer record so they can see their bookings and book online. Leave blank
+              if they don&apos;t have an account yet, or clear it to disconnect one already linked.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
