@@ -121,3 +121,50 @@ export async function cancelReservation(
   revalidatePath(`/customers/${customerId}`);
   return {};
 }
+
+/** Accepts a customer's self-service reservation — see approve_reservation() (0020). */
+export async function approveReservation(
+  rentalId: string,
+  vehicleId: string,
+  customerId: string
+): Promise<ReservationRpcResult> {
+  await requireRole(RESERVATION_CREATORS);
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("approve_reservation", { p_rental_id: rentalId });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/reservations");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
+  return {};
+}
+
+/** Rejects a customer's self-service reservation — see deny_reservation() (0020). */
+export async function denyReservation(
+  rentalId: string,
+  vehicleId: string,
+  customerId: string,
+  reason: string
+): Promise<ReservationRpcResult> {
+  await requireRole(RESERVATION_CREATORS);
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("deny_reservation", {
+    p_rental_id: rentalId,
+    p_reason: reason || null,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/reservations");
+  revalidatePath("/vehicles");
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/customers/${customerId}`);
+  return {};
+}

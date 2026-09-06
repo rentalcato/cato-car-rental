@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
+import { RentalStatusBadge, getCustomerFacingRentalLabel } from "@/components/rentals/rental-status-badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cancelMyReservation } from "@/lib/account/actions";
 import type { MyBookingRow } from "@/lib/account/queries";
@@ -73,7 +73,7 @@ export function MyBookingsTable({ bookings }: { bookings: MyBookingRow[] }) {
               <TableCell>
                 <RentalStatusBadge
                   status={booking.rental_status}
-                  label={booking.rental_status === "reserved" ? "Pending Reservation" : undefined}
+                  label={getCustomerFacingRentalLabel(booking.rental_status, booking.approval_status)}
                 />
               </TableCell>
               <TableCell className="text-right tabular-nums">

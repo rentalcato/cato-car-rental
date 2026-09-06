@@ -26,6 +26,8 @@ import type {
 export type UserRole = (typeof USER_ROLES)[number];
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number];
 export type RentalStatus = (typeof RENTAL_STATUSES)[number];
+/** Set only via the create_reservation/approve_reservation/deny_reservation RPCs (0020) — never chosen in a form, so not modeled off a lib/constants.ts array. Null = staff-created, implicitly pre-approved. */
+export type ReservationApprovalStatus = "pending" | "approved" | "denied";
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 export type IssueSeverity = (typeof ISSUE_SEVERITIES)[number];
 export type FuelType = (typeof FUEL_TYPES)[number];
@@ -150,6 +152,7 @@ export type Rental = {
   balance_due: number | null;
   deposit_amount: number;
   rental_status: RentalStatus;
+  approval_status: ReservationApprovalStatus | null;
   checkout_mileage: number | null;
   return_mileage: number | null;
   checkout_fuel_level: string | null;
@@ -327,6 +330,9 @@ export type Database = {
         void
       >;
       cancel_reservation: Fn<{ p_rental_id: string; p_reason?: string | null }, void>;
+      /** SECURITY DEFINER — see supabase/migrations/0020_reservation_approval.sql */
+      approve_reservation: Fn<{ p_rental_id: string }, void>;
+      deny_reservation: Fn<{ p_rental_id: string; p_reason?: string | null }, void>;
       /** SECURITY DEFINER — see supabase/migrations/0008_rental_completion_and_fixes.sql */
       complete_rental: Fn<
         {

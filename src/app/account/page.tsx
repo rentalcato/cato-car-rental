@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Car, CalendarClock, MapPin, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RentalStatusBadge } from "@/components/rentals/rental-status-badge";
+import { RentalStatusBadge, getCustomerFacingRentalLabel } from "@/components/rentals/rental-status-badge";
 import { MyBookingsTable } from "@/components/account/my-bookings-table";
 import { EditDetailsDialog } from "@/components/account/edit-details-dialog";
 import { MyDocumentsPanel } from "@/components/account/my-documents-panel";
@@ -122,7 +122,7 @@ export default async function AccountPage() {
                 </div>
                 <RentalStatusBadge
                   status={highlightTrip.rental_status}
-                  label={highlightTrip.rental_status === "reserved" ? "Pending Reservation" : undefined}
+                  label={getCustomerFacingRentalLabel(highlightTrip.rental_status, highlightTrip.approval_status)}
                 />
               </CardContent>
             </Card>

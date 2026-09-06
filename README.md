@@ -114,6 +114,12 @@ move to the next one):
     view their own ID/license documents. Deleting one stays staff-only,
     unchanged from 0006 — a customer adds a corrected upload rather
     than removing one already on file.
+20. `0020_reservation_approval.sql` — adds `rentals.approval_status`
+    (new `reservation_approval_status` enum: pending/approved/denied)
+    and two new `SECURITY DEFINER` functions, `approve_reservation`/
+    `deny_reservation`. A self-service reservation now starts genuinely
+    pending staff review instead of the "Pending Reservation" wording
+    being cosmetic only — see "Reservations" below.
 
 Afterwards, check **Table Editor** — you should see `profiles`, `vehicles`,
 `vehicle_photos`, `customers`, `customer_documents`, `audit_logs`,
@@ -260,6 +266,15 @@ walk-in checkout:
   `rented` vehicles.
 - No editing a booked reservation's vehicle/dates (cancel + rebook) and no
   auto-expiry/no-show handling yet — both are deliberate v1 cuts.
+- **Approval (0020)**: a staff-created reservation is implicitly
+  pre-approved; a customer's self-service one (`/account/fleet`) starts
+  `approval_status = 'pending'` and shows a "Pending Approval" badge plus
+  **Accept**/**Deny** buttons in place of Check-In/Cancel on the
+  Reservations list, until a staff member decides. Accept just clears
+  the pending flag (Check-In then works normally); Deny has the same
+  effect as Cancel (vehicle freed, rental cancelled) but is tracked
+  separately in the audit log. The customer sees their own reservation
+  as "Pending Reservation" until then, "Confirmed" once approved.
 
 **Rental completion (check-in/return)** — the other half of checkout: a
 "Complete" action (on the vehicle's Current Renter card, the customer's

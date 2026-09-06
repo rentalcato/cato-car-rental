@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { RentalStatus } from "@/types/database.types";
+import type { ReservationApprovalStatus, RentalStatus } from "@/types/database.types";
 
 export const RENTAL_STATUS_CONFIG: Record<RentalStatus, { label: string; color: string }> = {
   reserved: { label: "Reserved", color: "#2a78d6" },
@@ -31,4 +31,20 @@ export function RentalStatusBadge({
       {label ?? config.label}
     </Badge>
   );
+}
+
+/**
+ * What a customer sees for their own booking — distinct from the plain
+ * `status`, since "reserved" alone doesn't say whether staff have
+ * actually reviewed a self-service reservation yet (0020's
+ * approval_status). A staff-created reservation is implicitly
+ * pre-approved (approval_status stays null), so it reads as
+ * "Confirmed" immediately, same as an approved self-service one.
+ */
+export function getCustomerFacingRentalLabel(
+  rentalStatus: RentalStatus,
+  approvalStatus: ReservationApprovalStatus | null
+): string | undefined {
+  if (rentalStatus !== "reserved") return undefined;
+  return approvalStatus === "pending" ? "Pending Reservation" : "Confirmed";
 }

@@ -7,9 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckInDialog } from "@/components/reservations/check-in-dialog";
 import { CancelReservationDialog } from "@/components/reservations/cancel-reservation-dialog";
+import { ReservationApprovalActions } from "@/components/reservations/reservation-approval-actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { ReservationRow } from "@/lib/reservations/queries";
 
@@ -41,6 +43,7 @@ export function ReservationTable({
             <TableHead>Pickup</TableHead>
             <TableHead>Days</TableHead>
             <TableHead className="text-right">Deposit</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="w-1" />
           </TableRow>
         </TableHeader>
@@ -78,23 +81,44 @@ export function ReservationTable({
                 {formatCurrency(reservation.deposit_amount)}
               </TableCell>
               <TableCell>
+                {reservation.approval_status === "pending" ? (
+                  <Badge variant="secondary" className="gap-1.5 font-medium">
+                    <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden />
+                    Pending Approval
+                  </Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Confirmed</span>
+                )}
+              </TableCell>
+              <TableCell>
                 <div className="flex justify-end gap-1.5">
-                  {reservation.customer ? (
-                    <CheckInDialog
+                  {reservation.approval_status === "pending" ? (
+                    <ReservationApprovalActions
                       rentalId={reservation.id}
                       vehicleId={reservation.vehicle_id}
-                      customerId={reservation.customer.id}
+                      customerId={reservation.customer_id}
                       rentalNumber={reservation.rental_number}
-                      customerStatus={reservation.customer.status}
-                      canOverrideBlacklist={canOverrideBlacklist}
                     />
-                  ) : null}
-                  <CancelReservationDialog
-                    rentalId={reservation.id}
-                    vehicleId={reservation.vehicle_id}
-                    customerId={reservation.customer_id}
-                    rentalNumber={reservation.rental_number}
-                  />
+                  ) : (
+                    <>
+                      {reservation.customer ? (
+                        <CheckInDialog
+                          rentalId={reservation.id}
+                          vehicleId={reservation.vehicle_id}
+                          customerId={reservation.customer.id}
+                          rentalNumber={reservation.rental_number}
+                          customerStatus={reservation.customer.status}
+                          canOverrideBlacklist={canOverrideBlacklist}
+                        />
+                      ) : null}
+                      <CancelReservationDialog
+                        rentalId={reservation.id}
+                        vehicleId={reservation.vehicle_id}
+                        customerId={reservation.customer_id}
+                        rentalNumber={reservation.rental_number}
+                      />
+                    </>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
