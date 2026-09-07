@@ -7,6 +7,7 @@ import {
   CreditCard,
   Wrench,
   BarChart3,
+  History,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -75,6 +76,13 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Reports",
     href: "/reports",
     icon: BarChart3,
+    roles: ["super_admin", "manager"],
+  },
+  {
+    label: "Activity",
+    href: "/activity",
+    icon: History,
+    // Matches audit_logs_select in 0006 — staff can't see this table at all.
     roles: ["super_admin", "manager"],
   },
   {
