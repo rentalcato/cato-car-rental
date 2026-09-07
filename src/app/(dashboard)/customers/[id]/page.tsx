@@ -42,6 +42,7 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
   const { id } = await props.params;
   const searchParams = await props.searchParams;
   const linkWarning = searchParams.linkWarning === "1";
+  const docWarning = searchParams.docWarning === "1";
   const data = await getCustomerProfile(id);
   if (!data) notFound();
 
@@ -73,6 +74,13 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
           Customer saved, but no website account was found with that email — double check it, or
           confirm they&apos;ve signed up yet. You can try again from the Website Account box in
           the Overview tab below.
+        </div>
+      ) : null}
+
+      {docWarning ? (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Customer saved, but one or more documents couldn&apos;t be uploaded — try again from the
+          Documents tab below.
         </div>
       ) : null}
 

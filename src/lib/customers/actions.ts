@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit/log";
 import { customerFormSchema, fieldErrors } from "@/lib/customers/schema";
 import { findPossibleDuplicates, isEmailTaken } from "@/lib/customers/queries";
-import type { Customer, CustomerStatus } from "@/types/database.types";
+import { saveCustomerDocument } from "@/lib/customers/documents";
+import { DOCUMENT_TYPES } from "@/lib/constants";
+import type { Customer, CustomerStatus, DocumentType } from "@/types/database.types";
 
 const CUSTOMER_WRITERS = ["super_admin", "manager", "staff"] as const;
 const STATUS_MANAGERS = ["super_admin", "manager"] as const;
@@ -42,6 +44,16 @@ function dbErrorMessage(error: { code?: string; message: string }): string {
 }
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/** Builds the `?linkWarning=1&docWarning=1`-style query string for the post-save redirect. */
+function redirectWarnings(flags: Record<string, boolean>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(flags)) {
+    if (value) params.set(key, "1");
+  }
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
 
 /**
  * Shared by createCustomer/updateCustomer's "Website Account" field and
@@ -88,6 +100,45 @@ async function applyAccountLink(
     metadata: { email: matchedProfile.email },
   });
   return {};
+}
+
+/**
+ * Handles the three optional file inputs on the Add/Edit Customer form
+ * (license front/back, ID/passport) — same upload path the standalone
+ * Documents tab uses (saveCustomerDocument), just fed from this form's
+ * fields instead of its own. Best-effort: a failed attachment here should
+ * never block saving the customer record itself, so this only reports
+ * whether *something* went wrong, never a blocking error.
+ */
+async function uploadInlineDocuments(
+  supabase: SupabaseServerClient,
+  userId: string,
+  customerId: string,
+  formData: FormData
+): Promise<{ warning: boolean }> {
+  const slots: { file: FormDataEntryValue | null; documentType: DocumentType }[] = [
+    { file: formData.get("doc_license_front"), documentType: "drivers_license_front" },
+    { file: formData.get("doc_license_back"), documentType: "drivers_license_back" },
+  ];
+
+  const idType = formData.get("doc_id_type");
+  const idFile = formData.get("doc_id_file");
+  const validIdType = (DOCUMENT_TYPES as readonly string[]).includes(String(idType))
+    ? (idType as DocumentType)
+    : "national_id";
+  slots.push({ file: idFile, documentType: validIdType });
+
+  let warning = false;
+  for (const slot of slots) {
+    if (!(slot.file instanceof File) || slot.file.size === 0) continue;
+    const result = await saveCustomerDocument(supabase, userId, {
+      customerId,
+      documentType: slot.documentType,
+      file: slot.file,
+    });
+    if (result.error) warning = true;
+  }
+  return { warning };
 }
 
 export async function createCustomer(
@@ -148,8 +199,10 @@ export async function createCustomer(
     linkWarning = Boolean(result.warning);
   }
 
+  const { warning: docWarning } = await uploadInlineDocuments(supabase, userId, data.id, formData);
+
   revalidatePath("/customers");
-  redirect(`/customers/${data.id}${linkWarning ? "?linkWarning=1" : ""}`);
+  redirect(`/customers/${data.id}${redirectWarnings({ linkWarning, docWarning })}`);
 }
 
 export async function updateCustomer(
@@ -197,9 +250,11 @@ export async function updateCustomer(
     linkWarning = Boolean(result.warning);
   }
 
+  const { warning: docWarning } = await uploadInlineDocuments(supabase, userId, customerId, formData);
+
   revalidatePath("/customers");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/customers/${customerId}${linkWarning ? "?linkWarning=1" : ""}`);
+  redirect(`/customers/${customerId}${redirectWarnings({ linkWarning, docWarning })}`);
 }
 
 export interface StatusActionState {

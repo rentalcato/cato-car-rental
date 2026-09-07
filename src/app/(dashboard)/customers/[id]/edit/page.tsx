@@ -34,6 +34,7 @@ export default async function EditCustomerPage(props: PageProps<"/customers/[id]
             submitLabel="Save Changes"
             canManageAccountLink={canManageAccountLink}
             linkedAccountEmail={linkedAccountEmail}
+            customerId={customer.id}
           />
         </CardContent>
       </Card>

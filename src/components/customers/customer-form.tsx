@@ -1,15 +1,32 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DuplicateWarning } from "@/components/customers/duplicate-warning";
+import { DOCUMENT_TYPE_LABELS } from "@/components/customers/customer-documents-panel";
 import type { CustomerActionState } from "@/lib/customers/actions";
 import type { Customer } from "@/types/database.types";
 
 const initialState: CustomerActionState = {};
+
+/** Restricted to what a walk-in usually brings — the full type list (rental
+ *  agreements, signed docs, etc.) is staff-generated paperwork that belongs
+ *  in the Documents tab, not this quick-attach section. */
+const ID_DOCUMENT_TYPES = ["national_id", "passport", "other"] as const;
+
+const fileInputClassName =
+  "flex h-8 w-full rounded-lg border border-input bg-transparent text-sm file:mr-3 file:h-full file:border-0 file:bg-secondary file:px-2.5 file:text-sm file:font-medium file:text-secondary-foreground";
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
@@ -51,6 +68,7 @@ export function CustomerForm({
   submitLabel,
   canManageAccountLink,
   linkedAccountEmail,
+  customerId,
 }: {
   action: (prevState: CustomerActionState, formData: FormData) => Promise<CustomerActionState>;
   defaultValues?: Partial<Customer>;
@@ -59,6 +77,8 @@ export function CustomerForm({
   canManageAccountLink?: boolean;
   /** Pre-fills the field on Edit when already linked; irrelevant (and omitted) on Add. */
   linkedAccountEmail?: string | null;
+  /** Editing an existing customer — shows a link to their full Documents tab instead of just the quick-attach note. */
+  customerId?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const errors = state.fieldErrors ?? {};
@@ -244,6 +264,69 @@ export function CustomerForm({
               maxLength={50}
             />
           </Field>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Identification Documents</h3>
+          <p className="text-xs text-muted-foreground">
+            Optional — attach a photo or scan now, or skip and do it later from{" "}
+            {customerId ? (
+              <Link href={`/customers/${customerId}`} className="underline">
+                this customer&apos;s Documents tab
+              </Link>
+            ) : (
+              "the customer's Documents tab"
+            )}
+            . JPG, PNG or PDF, up to 10MB each.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="doc_license_front">Driver&apos;s License (Front)</Label>
+            <input
+              id="doc_license_front"
+              name="doc_license_front"
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              className={fileInputClassName}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="doc_license_back">Driver&apos;s License (Back)</Label>
+            <input
+              id="doc_license_back"
+              name="doc_license_back"
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              className={fileInputClassName}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="doc_id_file">National ID / Passport</Label>
+            <div className="flex gap-2">
+              <Select name="doc_id_type" defaultValue="national_id">
+                <SelectTrigger className="w-32 shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ID_DOCUMENT_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {DOCUMENT_TYPE_LABELS[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                id="doc_id_file"
+                name="doc_id_file"
+                type="file"
+                accept="image/jpeg,image/png,application/pdf"
+                className={fileInputClassName}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
