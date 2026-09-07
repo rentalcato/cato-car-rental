@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/format";
-import { AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPE_LABELS, humanize } from "@/lib/audit/log";
+import { AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPE_LABELS, humanize } from "@/lib/audit/constants";
 import type { AuditLogRow } from "@/lib/audit/queries";
 
 /** Loosely groups actions by shape so the badge color carries meaning at a glance. */

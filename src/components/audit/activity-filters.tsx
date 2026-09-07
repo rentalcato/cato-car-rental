@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AUDIT_ACTIONS, AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPES, AUDIT_ENTITY_TYPE_LABELS } from "@/lib/audit/log";
+import { AUDIT_ACTIONS, AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPES, AUDIT_ENTITY_TYPE_LABELS } from "@/lib/audit/constants";
 
 export function ActivityFilters({
   defaultSearch,

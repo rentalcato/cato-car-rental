@@ -3,7 +3,7 @@ import { ActivityFilters } from "@/components/audit/activity-filters";
 import { ActivityTable } from "@/components/audit/activity-table";
 import { requireRole } from "@/lib/auth/dal";
 import { listAuditLogs } from "@/lib/audit/queries";
-import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/lib/audit/log";
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from "@/lib/audit/constants";
 
 export default async function ActivityPage(props: PageProps<"/activity">) {
   await requireRole(["super_admin", "manager"]);

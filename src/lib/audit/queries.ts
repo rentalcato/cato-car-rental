@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPE_LABELS, humanize } from "@/lib/audit/log";
+import { AUDIT_ACTION_LABELS, AUDIT_ENTITY_TYPE_LABELS, humanize } from "@/lib/audit/constants";
 import { formatCurrency } from "@/lib/format";
 import type { AuditLog } from "@/types/database.types";
 
