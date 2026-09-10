@@ -37,6 +37,17 @@ export interface OverdueRentalRow {
   balanceDue: number | null;
 }
 
+export interface LoyaltyRedemptionRow {
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerNumber: string;
+  /** e.g. "Redeemed: $10 Discount" — the ledger's own snapshot label (lib/loyalty), stays accurate even if the reward is later renamed/deleted. */
+  label: string;
+  pointsUsed: number;
+  redeemedAt: string;
+}
+
 export interface ReportsData {
   revenueToday: number;
   revenueThisMonth: number;
@@ -54,6 +65,7 @@ export interface ReportsData {
   topCustomers: TopCustomerRow[];
   reservationsCreated: number;
   reservationsActivated: number;
+  recentRedemptions: LoyaltyRedemptionRow[];
 }
 
 const MONTH_LABELS = [
@@ -76,6 +88,7 @@ export async function getReportsData(): Promise<ReportsData> {
     maintenanceResult,
     customersResult,
     auditResult,
+    redemptionsResult,
   ] = await Promise.all([
     // No date filter: needed both for the true all-time total and the
     // 12-month trend buckets below.
@@ -92,6 +105,14 @@ export async function getReportsData(): Promise<ReportsData> {
       .from("audit_logs")
       .select("action")
       .in("action", ["reservation_created", "reservation_activated"]),
+    // Loyalty redemptions (0024) — a customer's own name/number, not
+    // just the customer_id, so this doesn't need a second round trip.
+    supabase
+      .from("loyalty_point_transactions")
+      .select("id, customer_id, points_delta, label, created_at, customer:customers(id, customer_number, first_name, last_name)")
+      .eq("transaction_type", "redeemed")
+      .order("created_at", { ascending: false })
+      .limit(25),
   ]);
 
   if (paymentsResult.error) throw paymentsResult.error;
@@ -100,6 +121,12 @@ export async function getReportsData(): Promise<ReportsData> {
   if (maintenanceResult.error) throw maintenanceResult.error;
   if (customersResult.error) throw customersResult.error;
   if (auditResult.error) throw auditResult.error;
+  // 42P01/PGRST205 = relation doesn't exist — degrade to "no redemptions
+  // yet" instead of breaking the whole Reports page if 0024 hasn't been
+  // applied to this database yet (same pattern as lib/loyalty/queries.ts).
+  if (redemptionsResult.error && redemptionsResult.error.code !== "42P01" && redemptionsResult.error.code !== "PGRST205") {
+    throw redemptionsResult.error;
+  }
 
   const payments = paymentsResult.data ?? [];
   const rentals = rentalsResult.data ?? [];
@@ -107,6 +134,7 @@ export async function getReportsData(): Promise<ReportsData> {
   const maintenance = maintenanceResult.data ?? [];
   const customers = customersResult.data ?? [];
   const auditLogs = auditResult.data ?? [];
+  const redemptions = redemptionsResult.data ?? [];
 
   // --- Revenue windows (net of refunds — payment_amount is signed) ---
   let revenueToday = 0;
@@ -233,6 +261,20 @@ export async function getReportsData(): Promise<ReportsData> {
   const reservationsCreated = auditLogs.filter((a) => a.action === "reservation_created").length;
   const reservationsActivated = auditLogs.filter((a) => a.action === "reservation_activated").length;
 
+  // --- Recent loyalty redemptions ---
+  const recentRedemptions: LoyaltyRedemptionRow[] = redemptions.map((r) => {
+    const c = Array.isArray(r.customer) ? r.customer[0] : r.customer;
+    return {
+      id: r.id,
+      customerId: r.customer_id,
+      customerName: c ? `${c.first_name} ${c.last_name}` : "Unknown customer",
+      customerNumber: c?.customer_number ?? "—",
+      label: r.label,
+      pointsUsed: Math.abs(r.points_delta),
+      redeemedAt: r.created_at,
+    };
+  });
+
   return {
     revenueToday,
     revenueThisMonth,
@@ -250,5 +292,6 @@ export async function getReportsData(): Promise<ReportsData> {
     topCustomers,
     reservationsCreated,
     reservationsActivated,
+    recentRedemptions,
   };
 }

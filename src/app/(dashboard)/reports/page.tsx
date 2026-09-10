@@ -5,6 +5,7 @@ import { RevenueTrendChart } from "@/components/reports/revenue-trend-chart";
 import { FleetPerformanceTable } from "@/components/reports/fleet-performance-table";
 import { TopCustomersTable } from "@/components/reports/top-customers-table";
 import { OverdueRentalsTable } from "@/components/reports/overdue-rentals-table";
+import { LoyaltyRedemptionsTable } from "@/components/reports/loyalty-redemptions-table";
 import { requireRole } from "@/lib/auth/dal";
 import { getReportsData } from "@/lib/reports/queries";
 import { formatCurrency, formatNumber } from "@/lib/format";
@@ -84,6 +85,13 @@ export default async function ReportsPage() {
       <div>
         <h3 className="mb-2 text-sm font-semibold">Top Customers by Revenue</h3>
         <TopCustomersTable customers={data.topCustomers} />
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-semibold">
+          Loyalty Redemptions {data.recentRedemptions.length > 0 ? `(${data.recentRedemptions.length})` : ""}
+        </h3>
+        <LoyaltyRedemptionsTable redemptions={data.recentRedemptions} />
       </div>
     </div>
   );
