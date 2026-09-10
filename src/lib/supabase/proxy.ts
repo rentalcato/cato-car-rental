@@ -8,12 +8,18 @@ const PUBLIC_PATHS = [
   "/",
   "/login",
   "/signup",
+  "/forgot-password",
   "/unauthorized",
   "/auth/callback",
   "/fleet",
   "/terms",
   "/privacy",
 ];
+// "/reset-password" is deliberately not public — a visitor only ever
+// reaches it with a valid recovery session already set by
+// /auth/callback (see the password-reset email's redirectTo), so the
+// normal signed-in-only gate below is exactly the right behaviour: no
+// session, no page, same as any other protected route.
 
 /**
  * Called from src/proxy.ts on every request. Refreshes the Supabase auth

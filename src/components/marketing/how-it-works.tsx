@@ -1,7 +1,7 @@
 const STEPS = [
   { step: "1", title: "Choose Your Vehicle", description: "Browse our fleet and find the right vehicle for your trip." },
-  { step: "2", title: "Make a Reservation", description: "Reach out to our team to reserve your dates and vehicle." },
-  { step: "3", title: "Confirm Your Details", description: "We confirm pickup details, pricing and any required documents." },
+  { step: "2", title: "Book Online", description: "Create a free account and request your reservation in minutes." },
+  { step: "3", title: "Get Confirmed", description: "We confirm your booking, pricing and any required documents." },
   { step: "4", title: "Pick Up and Drive", description: "Collect your vehicle and get on the road." },
 ];
 
