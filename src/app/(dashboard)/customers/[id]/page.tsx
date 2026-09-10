@@ -15,10 +15,12 @@ import { CustomerRentalHistoryTable } from "@/components/customers/customer-rent
 import { CustomerFinancialSummary } from "@/components/customers/customer-financial-summary";
 import { CustomerPaymentHistoryTable } from "@/components/customers/customer-payment-history-table";
 import { CustomerIncidentHistoryTable } from "@/components/customers/customer-incident-history-table";
+import { GrantPointsPanel } from "@/components/customers/grant-points-panel";
 import { CompleteRentalDialog } from "@/components/rentals/complete-rental-dialog";
 import { requireRole } from "@/lib/auth/dal";
 import { canAccess } from "@/lib/auth/roles";
 import { getCustomerProfile } from "@/lib/customers/queries";
+import { getActiveEarningRules, getCustomerPointHistory, getCustomerPointsBalance } from "@/lib/loyalty/queries";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 function DetailItem({ label, value }: { label: string; value: string | null | undefined }) {
@@ -45,6 +47,12 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
   const docWarning = searchParams.docWarning === "1";
   const data = await getCustomerProfile(id);
   if (!data) notFound();
+
+  const [pointsBalance, pointHistory, earningRules] = await Promise.all([
+    getCustomerPointsBalance(data.customer.id),
+    getCustomerPointHistory(data.customer.id),
+    getActiveEarningRules(),
+  ]);
 
   const {
     customer,
@@ -295,9 +303,17 @@ export default async function CustomerProfilePage(props: PageProps<"/customers/[
           </div>
         </TabsContent>
 
-        <TabsContent value="financial">
-          <h3 className="mb-2 text-sm font-semibold">Payment History</h3>
-          <CustomerPaymentHistoryTable payments={paymentHistory} />
+        <TabsContent value="financial" className="space-y-6">
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">Payment History</h3>
+            <CustomerPaymentHistoryTable payments={paymentHistory} />
+          </div>
+          <GrantPointsPanel
+            customerId={customer.id}
+            balance={pointsBalance}
+            rules={earningRules}
+            recentHistory={pointHistory.slice(0, 8)}
+          />
         </TabsContent>
 
         <TabsContent value="incidents">

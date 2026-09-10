@@ -1,15 +1,22 @@
-import { Check, Gift, Share2 } from "lucide-react";
+import { CheckCircle2, Gift, History, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReferralCodeCard } from "@/components/account/referral-code-card";
-import { getMyAccount, getMyBookings } from "@/lib/account/queries";
-import { computeLoyaltySummary, LOYALTY_TIERS } from "@/lib/loyalty/compute";
-import { formatCurrency } from "@/lib/format";
+import { RedeemRewardButton } from "@/components/account/redeem-reward-button";
+import { getMyAccount } from "@/lib/account/queries";
+import {
+  getActiveEarningRules,
+  getActiveRewards,
+  getCustomerPointHistory,
+  getCustomerPointsBalance,
+} from "@/lib/loyalty/queries";
+import { getReferralCode } from "@/lib/loyalty/compute";
+import { getRewardTypeIcon, getRewardTypeLabel } from "@/lib/loyalty/labels";
+import { formatDateTime } from "@/lib/format";
 
 export default async function LoyaltyPage() {
   const account = await getMyAccount();
   const customer = account?.customer;
-  const bookings = customer ? await getMyBookings(customer.id) : [];
 
   if (!customer) {
     return (
@@ -20,64 +27,146 @@ export default async function LoyaltyPage() {
     );
   }
 
-  const summary = computeLoyaltySummary(bookings, customer.customer_number);
+  const [balance, rules, rewards, history] = await Promise.all([
+    getCustomerPointsBalance(customer.id),
+    getActiveEarningRules(),
+    getActiveRewards(),
+    getCustomerPointHistory(customer.id),
+  ]);
+
+  const referralRule = rules.find((r) => r.action_key === "referral_completed");
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Loyalty &amp; Rewards</h1>
-        <p className="text-sm text-muted-foreground">Earn points on every completed rental — redemption is coming soon.</p>
+        <p className="text-sm text-muted-foreground">Earn points on every rental and spend them on real rewards.</p>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
           <div>
-            <p className="text-xs font-medium tracking-wide text-primary uppercase">{summary.tier.name} Member</p>
-            <p className="text-3xl font-bold tabular-nums">{summary.points.toLocaleString()} pts</p>
-            <p className="text-sm text-muted-foreground">
-              From {formatCurrency(summary.lifetimeSpend)} spent across {summary.completedRentals} completed{" "}
-              {summary.completedRentals === 1 ? "rental" : "rentals"}
-            </p>
+            <p className="text-xs font-medium tracking-wide text-primary uppercase">Your Balance</p>
+            <p className="text-3xl font-bold tabular-nums">{balance.toLocaleString()} pts</p>
           </div>
           <Gift className="size-10 text-primary/40" />
         </CardContent>
-        {summary.nextTier ? (
-          <CardContent className="border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              {summary.pointsToNextTier.toLocaleString()} more points to reach{" "}
-              <span className="font-medium text-foreground">{summary.nextTier.name}</span>
-            </p>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{
-                  width: `${Math.min(100, (summary.points / summary.nextTier.minPoints) * 100)}%`,
-                }}
-              />
-            </div>
-          </CardContent>
-        ) : null}
       </Card>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Membership Tiers</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {LOYALTY_TIERS.map((tier) => (
-            <Card key={tier.name} className={tier.name === summary.tier.name ? "ring-2 ring-primary" : undefined}>
-              <CardContent className="flex flex-col gap-1 p-4">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{tier.name}</p>
-                  {tier.name === summary.tier.name ? <Badge>Current</Badge> : null}
-                </div>
-                <p className="text-xs text-muted-foreground">{tier.minPoints.toLocaleString()}+ points</p>
-                <p className="mt-1 flex items-center gap-1.5 text-sm">
-                  <Check className="size-3.5 shrink-0 text-primary" />
-                  {tier.perk}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <h2 className="mb-3 text-lg font-semibold">How You Earn Points</h2>
+        {rules.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No earning rules are active right now — check back soon.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {rules.map((rule) => (
+              <Card key={rule.id}>
+                <CardContent className="flex items-start justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{rule.name}</p>
+                    {rule.description ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{rule.description}</p>
+                    ) : null}
+                  </div>
+                  <Badge className="shrink-0">
+                    +{rule.points.toLocaleString()} {rule.action_key === "spend_per_dollar" ? "/ $1" : "pts"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Available Rewards</h2>
+        {rewards.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No rewards are available to redeem right now.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {rewards.map((reward) => {
+              const Icon = getRewardTypeIcon(reward.reward_type);
+              const canAfford = balance >= reward.points_required;
+              return (
+                <Card key={reward.id} className={canAfford ? "ring-1 ring-primary/30" : undefined}>
+                  <CardContent className="flex flex-col gap-3 p-4">
+                    <div className="flex items-start gap-2">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Icon className="size-4.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">{reward.name}</p>
+                        <p className="text-xs text-muted-foreground">{getRewardTypeLabel(reward.reward_type)}</p>
+                      </div>
+                    </div>
+                    {reward.description ? (
+                      <p className="text-xs text-muted-foreground">{reward.description}</p>
+                    ) : null}
+                    <div className="mt-auto flex items-end justify-between gap-2 border-t pt-3">
+                      <div>
+                        <p className="text-lg font-bold tabular-nums">{reward.points_required.toLocaleString()}</p>
+                        <p className="text-[11px] text-muted-foreground">points {reward.reward_value ? `· ${reward.reward_value}` : ""}</p>
+                      </div>
+                      <RedeemRewardButton
+                        rewardId={reward.id}
+                        canAfford={canAfford}
+                        pointsShort={Math.max(0, reward.points_required - balance)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <History className="size-4.5" />
+          Points History
+        </h2>
+        <Card>
+          <CardContent className="p-0">
+            {history.length === 0 ? (
+              <p className="p-5 text-sm text-muted-foreground">No point activity yet.</p>
+            ) : (
+              <ul className="divide-y">
+                {history.map((entry) => (
+                  <li key={entry.id} className="flex items-center justify-between gap-3 p-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
+                          entry.points_delta >= 0
+                            ? "bg-emerald-500/10 text-emerald-600"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {entry.points_delta >= 0 ? (
+                          <CheckCircle2 className="size-4" />
+                        ) : (
+                          <Gift className="size-4" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{entry.label}</p>
+                        <p className="text-xs text-muted-foreground">{formatDateTime(entry.created_at)}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 font-semibold tabular-nums ${
+                        entry.points_delta >= 0 ? "text-emerald-600" : "text-destructive"
+                      }`}
+                    >
+                      {entry.points_delta >= 0 ? "+" : ""}
+                      {entry.points_delta.toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div>
@@ -88,10 +177,12 @@ export default async function LoyaltyPage() {
         <Card>
           <CardContent className="space-y-3 p-5">
             <p className="text-sm text-muted-foreground">
-              Share your referral code with friends and family. Referral rewards tracking is coming soon —
-              for now, just have them mention your code when they book.
+              Share your referral code with friends and family.{" "}
+              {referralRule
+                ? `Once a friend you refer completes a rental, let us know and we'll add ${referralRule.points.toLocaleString()} points to your balance.`
+                : "Have them mention your code when they book."}
             </p>
-            <ReferralCodeCard code={summary.referralCode} />
+            <ReferralCodeCard code={getReferralCode(customer.customer_number)} />
           </CardContent>
         </Card>
       </div>

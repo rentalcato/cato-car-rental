@@ -19,7 +19,7 @@ import { getMyNotifications } from "@/lib/notifications/queries";
 import { getRentalCheckin } from "@/lib/checkin/queries";
 import { getVehiclePhotos } from "@/lib/vehicles/queries";
 import { assignFallbackImage, getPublicBusinessInfo } from "@/lib/marketing/queries";
-import { computeLoyaltySummary } from "@/lib/loyalty/compute";
+import { getCustomerPointsBalance } from "@/lib/loyalty/queries";
 import { getNotificationVisual } from "@/lib/notifications/catalog";
 import { formatCurrency } from "@/lib/format";
 
@@ -104,7 +104,7 @@ export default async function AccountPage(props: { searchParams: Promise<{ booke
     (b) => b.rental_status === "active" || b.rental_status === "overdue" || b.rental_status === "reserved"
   );
   const balanceDue = openBookings.reduce((sum, b) => sum + (b.balance_due ?? 0), 0);
-  const loyalty = customer ? computeLoyaltySummary(bookings, customer.customer_number) : null;
+  const pointsBalance = await getCustomerPointsBalance(customer?.id);
 
   return (
     <div className="space-y-6">
@@ -138,7 +138,7 @@ export default async function AccountPage(props: { searchParams: Promise<{ booke
             <StatCard
               icon={Gift}
               label="Loyalty Points"
-              value={String(loyalty?.points ?? 0)}
+              value={String(pointsBalance)}
               href="/account/loyalty"
             />
           </div>
