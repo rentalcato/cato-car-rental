@@ -1,12 +1,29 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Users, Cog } from "lucide-react";
+import { Users, Cog, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import type { FleetCard } from "@/lib/marketing/queries";
 
-export function FleetVehicleCard({ vehicle }: { vehicle: FleetCard }) {
-  const href = vehicle.isDemo ? "#contact" : `/fleet/${vehicle.id}`;
+/**
+ * The one vehicle card used everywhere a vehicle needs to be browsed —
+ * the homepage fleet showcase and the Similar Vehicles section on a
+ * Vehicle Details page both render this exact component, just pointed
+ * at a different details-route base (`hrefBase`) for the audience
+ * they're shown to (public `/fleet/[id]` vs the signed-in `/account/fleet/[id]`).
+ * The whole card stays a click target (existing behaviour, unchanged);
+ * the explicit Details button just makes that affordance unambiguous.
+ */
+export function FleetVehicleCard({
+  vehicle,
+  hrefBase = "/fleet",
+}: {
+  vehicle: FleetCard;
+  hrefBase?: string;
+}) {
+  const href = vehicle.isDemo ? "#contact" : `${hrefBase}/${vehicle.id}`;
 
   return (
     <Link
@@ -46,7 +63,7 @@ export function FleetVehicleCard({ vehicle }: { vehicle: FleetCard }) {
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-t pt-3">
+        <div className="flex items-center justify-between gap-2 border-t pt-3">
           <div>
             {vehicle.dailyRate !== null ? (
               <>
@@ -57,8 +74,19 @@ export function FleetVehicleCard({ vehicle }: { vehicle: FleetCard }) {
               <span className="text-sm text-muted-foreground">Price on request</span>
             )}
           </div>
-          <span className="text-sm font-medium text-primary group-hover:underline">
-            {vehicle.isDemo ? "Enquire" : "View Details"}
+          {/* A styled span, not <Button> — the whole card is already the
+              <Link>, so an actual nested <button> would be invalid HTML.
+              This is the visible "Details" affordance the card's click
+              target represents. */}
+          <span
+            aria-hidden
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
+            )}
+          >
+            {vehicle.isDemo ? "Enquire" : "Details"}
+            <ArrowRight className="size-3.5" />
           </span>
         </div>
       </div>

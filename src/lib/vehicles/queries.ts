@@ -91,6 +91,35 @@ export async function getVehiclePhotos(vehicleId: string): Promise<VehiclePhotoW
   }));
 }
 
+/**
+ * One photo URL per vehicle id, batched — for a list of cards (a
+ * customer's bookings/favorites) that would otherwise need one
+ * getVehiclePhotos() round trip each. Vehicles with no uploaded photo are
+ * simply absent from the returned map; callers fall back to
+ * assignFallbackImage() (lib/marketing/queries.ts) for those.
+ */
+export async function getFirstPhotoUrlsByVehicleIds(vehicleIds: string[]): Promise<Map<string, string>> {
+  const uniqueIds = [...new Set(vehicleIds)];
+  if (uniqueIds.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vehicle_photos")
+    .select("vehicle_id, storage_path, created_at")
+    .in("vehicle_id", uniqueIds)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const result = new Map<string, string>();
+  for (const photo of data ?? []) {
+    if (!result.has(photo.vehicle_id)) {
+      result.set(photo.vehicle_id, supabase.storage.from(PHOTO_BUCKET).getPublicUrl(photo.storage_path).data.publicUrl);
+    }
+  }
+  return result;
+}
+
 export interface CurrentRentalInfo extends Rental {
   customer: Pick<Customer, "id" | "customer_number" | "first_name" | "last_name" | "primary_phone"> | null;
 }
