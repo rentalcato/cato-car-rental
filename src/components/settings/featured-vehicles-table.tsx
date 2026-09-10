@@ -16,8 +16,12 @@ import type { WebsiteVehicleRow } from "@/lib/settings/queries";
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Available",
+  reserved: "Reserved",
   rented: "Rented",
+  overdue: "Overdue",
   maintenance: "Maintenance",
+  damaged: "Damaged",
+  out_of_service: "Out of Service",
 };
 
 function FeaturedVehicleRow({ vehicle }: { vehicle: WebsiteVehicleRow }) {
@@ -94,8 +98,9 @@ export function FeaturedVehiclesTable({ vehicles }: { vehicles: WebsiteVehicleRo
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Choose which vehicles appear in the &ldquo;Explore Our Fleet&rdquo; section on the public
-        homepage, and the order they appear in (lowest first). Only vehicles currently{" "}
-        <strong>Available</strong> are ever shown publicly, regardless of this setting.
+        homepage, and the order they appear in (lowest first). A featured vehicle stays listed
+        even while reserved or rented out — it just shows that status — and only drops off once
+        it&apos;s sent to maintenance, marked damaged, or taken out of service.
       </p>
       <div className="overflow-x-auto rounded-md border">
         <Table>

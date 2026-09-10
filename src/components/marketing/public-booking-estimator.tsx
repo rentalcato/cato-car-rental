@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, Info, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,11 +35,16 @@ export function PublicBookingEstimator({
   dailyRate,
   deposit,
   location,
+  isBookable,
+  availabilityLabel,
 }: {
   vehicleId: string;
   dailyRate: number | null;
   deposit: number | null;
   location: string | null;
+  /** false while the vehicle has an open reservation/rental (0024) — the estimate still shows, but "Book Now" is replaced with an explanation. */
+  isBookable: boolean;
+  availabilityLabel: string;
 }) {
   const [pickupDate, setPickupDate] = useState(() => {
     const tomorrow = new Date();
@@ -117,16 +122,28 @@ export function PublicBookingEstimator({
         </div>
       </div>
 
-      <Button size="lg" className="w-full" render={<Link href={`/login?next=/account/fleet/${vehicleId}`} />}>
-        Book Now
-      </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        Sign in to confirm this reservation, or{" "}
-        <Link href="/signup" className="font-medium underline underline-offset-2">
-          create an account
-        </Link>{" "}
-        first.
-      </p>
+      {isBookable ? (
+        <>
+          <Button size="lg" className="w-full" render={<Link href={`/login?next=/account/fleet/${vehicleId}`} />}>
+            Book Now
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Sign in to confirm this reservation, or{" "}
+            <Link href="/signup" className="font-medium underline underline-offset-2">
+              create an account
+            </Link>{" "}
+            first.
+          </p>
+        </>
+      ) : (
+        <div className="flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-500">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          <span>
+            This vehicle is currently <strong>{availabilityLabel.toLowerCase()}</strong> and can&apos;t be booked
+            right now. Check the Similar Vehicles below, or check back once it&apos;s available again.
+          </span>
+        </div>
+      )}
     </div>
   );
 }

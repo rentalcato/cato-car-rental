@@ -229,6 +229,56 @@ export type SupportMessage = {
   created_at: string;
 };
 
+export type LoyaltyRewardType =
+  | "fixed_discount"
+  | "percentage_discount"
+  | "free_rental_day"
+  | "free_upgrade"
+  | "special_offer"
+  | "custom";
+
+/** Admin-configurable point-earning action (0024) — see Settings -> Loyalty Program. */
+export type LoyaltyEarningRule = {
+  id: string;
+  action_key: string;
+  name: string;
+  description: string | null;
+  points: number;
+  is_active: boolean;
+  /** True for the handful of actions a real DB trigger awards automatically — informational only, doesn't restrict editing. */
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Admin-configurable redeemable reward (0024). */
+export type LoyaltyReward = {
+  id: string;
+  name: string;
+  description: string | null;
+  points_required: number;
+  reward_type: LoyaltyRewardType | string;
+  reward_value: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/** One entry in a customer's point ledger (0024) — a balance is always SUM(points_delta), never stored separately. */
+export type LoyaltyPointTransaction = {
+  id: string;
+  customer_id: string;
+  points_delta: number;
+  transaction_type: "earned" | "redeemed" | "adjusted";
+  rule_id: string | null;
+  reward_id: string | null;
+  label: string;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type VehicleIssue = {
   id: string;
   vehicle_id: string;
@@ -300,6 +350,10 @@ export type PublicVehicleListing = {
   body_type: BodyType | null;
   /** Every uploaded photo, oldest first (0023) — null/empty when none uploaded. */
   photo_storage_paths: string[] | null;
+  /** 0024 — the view now includes reserved/rented/overdue vehicles too, not just 'available'. */
+  vehicle_status: VehicleStatus;
+  /** approval_status of the vehicle's current open rental, if any (0024) — null when there isn't one, or it wasn't a self-service booking needing approval. */
+  current_rental_approval_status: ReservationApprovalStatus | null;
 };
 
 /** Read-only view (0023) — the subset of app_settings safe to show on a public vehicle page. */
@@ -356,6 +410,9 @@ export type Database = {
       public_vehicle_listings: Table<PublicVehicleListing>;
       public_business_info: Table<PublicBusinessInfo>;
       public_rental_policy: Table<PublicRentalPolicy>;
+      loyalty_earning_rules: Table<LoyaltyEarningRule>;
+      loyalty_rewards: Table<LoyaltyReward>;
+      loyalty_point_transactions: Table<LoyaltyPointTransaction>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -465,6 +522,9 @@ export type Database = {
         { p_email_notifications_enabled: boolean; p_sms_notifications_enabled: boolean },
         void
       >;
+      /** SECURITY DEFINER — staff+ only, enforced inside the function. See supabase/migrations/0024. */
+      grant_loyalty_points: Fn<{ p_customer_id: string; p_rule_id: string; p_note?: string | null }, void>;
+      redeem_loyalty_reward: Fn<{ p_reward_id: string }, void>;
     };
   };
 };

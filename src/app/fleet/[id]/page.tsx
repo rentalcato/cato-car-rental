@@ -18,6 +18,7 @@ import {
   getVehicleListingById,
 } from "@/lib/marketing/queries";
 import { computePricingTiers, getEstimatedDoors, getVehicleDescription, getVehicleFeatures } from "@/lib/vehicles/details";
+import { getVehicleAvailability } from "@/lib/vehicles/availability";
 import { FUEL_TYPE_LABELS } from "@/lib/vehicles/labels";
 
 // Public — no auth required. See src/lib/supabase/proxy.ts's PUBLIC_PATHS.
@@ -55,6 +56,7 @@ export default async function FleetVehiclePage({
   ];
 
   const vehicleLabel = `${vehicle.make} ${vehicle.model}`.trim();
+  const availability = getVehicleAvailability(vehicle.vehicleStatus, vehicle.currentRentalApprovalStatus);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -114,6 +116,8 @@ export default async function FleetVehiclePage({
                   dailyRate={vehicle.dailyRate}
                   deposit={policy?.default_security_deposit ?? null}
                   location={business?.address ?? null}
+                  isBookable={vehicle.isBookable}
+                  availabilityLabel={availability.label}
                 />
               </CardContent>
             </Card>

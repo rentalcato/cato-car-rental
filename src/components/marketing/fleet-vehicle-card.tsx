@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Users, Cog, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { VehicleAvailabilityBadge } from "@/components/marketing/vehicle-availability-badge";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import type { FleetCard } from "@/lib/marketing/queries";
@@ -42,6 +43,13 @@ export function FleetVehicleCard({
         <Badge variant="secondary" className="absolute top-3 left-3 shadow-sm">
           {vehicle.category}
         </Badge>
+        {!vehicle.isDemo ? (
+          <VehicleAvailabilityBadge
+            vehicleStatus={vehicle.vehicleStatus}
+            currentRentalApprovalStatus={vehicle.currentRentalApprovalStatus}
+            className="absolute top-3 right-3 shadow-sm"
+          />
+        ) : null}
       </div>
 
       <div className="space-y-3 p-4">

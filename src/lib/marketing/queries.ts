@@ -9,6 +9,8 @@ import type {
   PublicBusinessInfo,
   PublicRentalPolicy,
   PublicVehicleListing,
+  ReservationApprovalStatus,
+  VehicleStatus,
 } from "@/types/database.types";
 
 const VEHICLE_PHOTO_BUCKET = "vehicle-photos";
@@ -29,6 +31,11 @@ export interface FleetCard {
   /** Raw enum values, alongside the display-ready `category`/`transmission` above — the Vehicle Details page's spec/feature/description helpers (lib/vehicles/details.ts) need these, not just their labels. */
   bodyType: BodyType | null;
   fuelType: FuelType | null;
+  /** 0024 — the fleet listing now includes reserved/rented/overdue vehicles, not just available ones. */
+  vehicleStatus: VehicleStatus;
+  currentRentalApprovalStatus: ReservationApprovalStatus | null;
+  /** Whether a *new* reservation can be started right now — false for anything but 'available' (mirrors check_vehicle_available_for_rental(), 0007). */
+  isBookable: boolean;
 }
 
 /**
@@ -56,6 +63,9 @@ export const FALLBACK_VEHICLES: FleetCard[] = [
     isDemo: true,
     bodyType: "sedan",
     fuelType: "gasoline",
+    vehicleStatus: "available",
+    currentRentalApprovalStatus: null,
+    isBookable: true,
   },
   {
     id: "demo-2",
@@ -74,6 +84,9 @@ export const FALLBACK_VEHICLES: FleetCard[] = [
     isDemo: true,
     bodyType: "suv",
     fuelType: "gasoline",
+    vehicleStatus: "available",
+    currentRentalApprovalStatus: null,
+    isBookable: true,
   },
   {
     id: "demo-3",
@@ -92,6 +105,9 @@ export const FALLBACK_VEHICLES: FleetCard[] = [
     isDemo: true,
     bodyType: "sedan",
     fuelType: "gasoline",
+    vehicleStatus: "available",
+    currentRentalApprovalStatus: null,
+    isBookable: true,
   },
   {
     id: "demo-4",
@@ -110,6 +126,9 @@ export const FALLBACK_VEHICLES: FleetCard[] = [
     isDemo: true,
     bodyType: "suv",
     fuelType: "gasoline",
+    vehicleStatus: "available",
+    currentRentalApprovalStatus: null,
+    isBookable: true,
   },
 ];
 
@@ -146,6 +165,12 @@ function toFleetCard(v: PublicVehicleListing, storagePublicUrl: (path: string) =
         : [];
   const imageUrls = uploadedPaths.length > 0 ? uploadedPaths.map(storagePublicUrl) : [assignFallbackImage(v.id)];
 
+  // Both new columns from 0024 — default to what was already true of
+  // every row this view could ever return before that migration ran
+  // (only 'available' vehicles, no open reservation), so a
+  // not-yet-migrated database doesn't mislabel a vehicle.
+  const vehicleStatus = v.vehicle_status ?? "available";
+
   return {
     id: v.id,
     make: v.make || "Vehicle",
@@ -160,6 +185,9 @@ function toFleetCard(v: PublicVehicleListing, storagePublicUrl: (path: string) =
     isDemo: false,
     bodyType: v.body_type,
     fuelType: v.fuel_type,
+    vehicleStatus,
+    currentRentalApprovalStatus: v.current_rental_approval_status ?? null,
+    isBookable: vehicleStatus === "available",
   };
 }
 
@@ -195,11 +223,14 @@ export async function getFleetShowcase(): Promise<FleetCard[]> {
 }
 
 /**
- * The full bookable catalog for a signed-in customer's "Browse Fleet"
+ * The full fleet catalog for a signed-in customer's "Browse Fleet"
  * screen (src/app/account/fleet) — same view as getFleetShowcase(), but
  * no .limit(8) (that cap is a homepage-hero concern, not a real
  * catalog) and no demo-fallback (an authenticated booking screen says
- * "nothing available" plainly, never shows fake cars to book).
+ * "nothing available" plainly, never shows fake cars to book). Despite
+ * the name, this can include non-bookable cards too (0024) — a vehicle
+ * with an open reservation still shows up, just with `isBookable: false`
+ * and an honest status; the caller decides what to do with that.
  *
  * `search` matches make/model only — this view never exposes the
  * license plate (that's still internal-only), unlike the staff-side
@@ -233,9 +264,11 @@ export async function getBookableVehicles(search?: string): Promise<FleetCard[]>
  * A single real vehicle's public detail page data. Reads the same
  * anon-readable public_vehicle_listings view as getFleetShowcase() — never
  * the RLS-locked vehicles table — so it can only ever return what's
- * currently featured, available and non-archived (see 0012/0013).
- * Returns null if the id doesn't match any such row (bad id, or the
- * vehicle since got rented/archived/unfeatured).
+ * currently featured and non-archived (see 0012/0013), in a status this
+ * view is willing to show at all (0024: available/reserved/rented/
+ * overdue — never maintenance/damaged/out_of_service). Returns null if
+ * the id doesn't match any such row (bad id, or the vehicle since got
+ * archived/unfeatured/taken out of service).
  */
 export async function getVehicleListingById(
   id: string

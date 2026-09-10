@@ -49,6 +49,33 @@ export async function getMyBookings(customerId: string | undefined): Promise<MyB
   return (data ?? []) as unknown as MyBookingRow[];
 }
 
+/**
+ * The one pending (awaiting-approval) reservation this customer has, if
+ * any — a customer may only ever have one at a time (create_reservation,
+ * 0024, enforces this at the database layer too, so this is a UI-level
+ * mirror of that rule, not the only place it's checked). Null when
+ * there isn't one — either because they have none, or their existing
+ * reservation has already moved past "pending" (approved/denied/
+ * cancelled/completed).
+ */
+export async function getMyPendingReservation(customerId: string | undefined): Promise<MyBookingRow | null> {
+  if (!customerId) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("rentals")
+    .select("*, vehicle:vehicles(license_plate, make, model)")
+    .eq("customer_id", customerId)
+    .eq("rental_status", "reserved")
+    .eq("approval_status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as unknown as MyBookingRow | null) ?? null;
+}
+
 /** Empty if the account isn't linked to a customers record yet — reads via payments_select_own (0018). */
 export async function getMyPayments(customerId: string | undefined): Promise<Payment[]> {
   if (!customerId) return [];

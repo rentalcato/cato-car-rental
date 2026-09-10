@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BookingForm } from "@/components/account/booking-form";
 import { FavoriteButton } from "@/components/account/favorite-button";
 import { VehicleGallery } from "@/components/marketing/vehicle-gallery";
@@ -12,7 +13,7 @@ import { VehicleFeatures } from "@/components/marketing/vehicle-features";
 import { VehicleRentalInfo } from "@/components/marketing/vehicle-rental-info";
 import { VehicleContactActions } from "@/components/marketing/vehicle-contact-actions";
 import { SimilarVehiclesSection } from "@/components/marketing/similar-vehicles-section";
-import { getMyAccount } from "@/lib/account/queries";
+import { getMyAccount, getMyPendingReservation } from "@/lib/account/queries";
 import { getMyFavoriteVehicleIds } from "@/lib/favorites/queries";
 import {
   getPublicBusinessInfo,
@@ -21,6 +22,7 @@ import {
   getVehicleListingById,
 } from "@/lib/marketing/queries";
 import { computePricingTiers, getEstimatedDoors, getVehicleDescription, getVehicleFeatures } from "@/lib/vehicles/details";
+import { getVehicleAvailability } from "@/lib/vehicles/availability";
 import { FUEL_TYPE_LABELS } from "@/lib/vehicles/labels";
 
 // AccountLayout already calls requireUser() for everything under /account.
@@ -43,9 +45,10 @@ export default async function AccountFleetVehiclePage({
 
   if (!vehicle) notFound();
 
-  const [favoriteIds, similar] = await Promise.all([
+  const [favoriteIds, similar, pendingReservation] = await Promise.all([
     getMyFavoriteVehicleIds(account?.customer?.id),
     getSimilarVehicles(id, vehicle.category),
+    getMyPendingReservation(account?.customer?.id),
   ]);
 
   const pricing = computePricingTiers(vehicle.dailyRate);
@@ -53,6 +56,7 @@ export default async function AccountFleetVehiclePage({
   const description = getVehicleDescription(vehicle);
   const doors = getEstimatedDoors(vehicle.bodyType);
   const vehicleLabel = `${vehicle.make} ${vehicle.model}`.trim();
+  const availability = getVehicleAvailability(vehicle.vehicleStatus, vehicle.currentRentalApprovalStatus);
 
   const specs: SpecItem[] = [
     { label: "Seats", value: String(vehicle.seats), icon: SPEC_ICONS.Users },
@@ -123,9 +127,7 @@ export default async function AccountFleetVehiclePage({
             <Card>
               <CardContent className="p-5">
                 <h3 className="mb-4 font-semibold">Reserve This Vehicle</h3>
-                {account?.customer ? (
-                  <BookingForm vehicleId={vehicle.id} dailyRate={vehicle.dailyRate} />
-                ) : (
+                {!account?.customer ? (
                   <div className="rounded-md border bg-muted/40 p-4">
                     <p className="text-sm font-medium">Your account isn&apos;t set up for booking yet</p>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -146,6 +148,38 @@ export default async function AccountFleetVehiclePage({
                       {!business?.phone && !business?.email ? " contact us." : "."}
                     </p>
                   </div>
+                ) : !vehicle.isBookable ? (
+                  <div className="rounded-md border bg-muted/40 p-4">
+                    <p className="text-sm font-medium">This vehicle isn&apos;t bookable right now</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      It&apos;s currently <strong>{availability.label.toLowerCase()}</strong>. Check the Similar
+                      Vehicles below, or check back once it&apos;s available again.
+                    </p>
+                  </div>
+                ) : pendingReservation ? (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-4">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-amber-800 dark:text-amber-500">
+                      <Clock className="size-4 shrink-0" />
+                      You already have a pending reservation
+                    </p>
+                    <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-500/80">
+                      Please wait for it to be reviewed, or manage it before submitting another —{" "}
+                      {pendingReservation.vehicle
+                        ? [pendingReservation.vehicle.make, pendingReservation.vehicle.model].filter(Boolean).join(" ")
+                        : "your vehicle"}
+                      , booking #{pendingReservation.rental_number}.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-3"
+                      render={<Link href={`/account/rentals/${pendingReservation.id}`} />}
+                    >
+                      View Pending Reservation
+                    </Button>
+                  </div>
+                ) : (
+                  <BookingForm vehicleId={vehicle.id} dailyRate={vehicle.dailyRate} />
                 )}
               </CardContent>
             </Card>

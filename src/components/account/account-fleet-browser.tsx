@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { FleetFilterBar } from "@/components/marketing/fleet-filter-bar";
 import { useFleetFilters } from "@/components/marketing/use-fleet-filters";
+import { VehicleAvailabilityBadge } from "@/components/marketing/vehicle-availability-badge";
 import { FavoriteButton } from "@/components/account/favorite-button";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -64,8 +65,13 @@ export function AccountFleetBrowser({
                 <Badge variant="secondary" className="absolute top-3 left-3 shadow-sm">
                   {vehicle.category}
                 </Badge>
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-1.5">
                   <FavoriteButton vehicleId={vehicle.id} initialFavorited={favoriteIds.has(vehicle.id)} />
+                  <VehicleAvailabilityBadge
+                    vehicleStatus={vehicle.vehicleStatus}
+                    currentRentalApprovalStatus={vehicle.currentRentalApprovalStatus}
+                    className="shadow-sm"
+                  />
                 </div>
               </div>
 
