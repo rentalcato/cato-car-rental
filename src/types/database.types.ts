@@ -105,6 +105,8 @@ export type Customer = {
   status: CustomerStatus;
   notes: string | null;
   profile_id: string | null;
+  email_notifications_enabled: boolean;
+  sms_notifications_enabled: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -176,6 +178,57 @@ export type Payment = {
   created_at: string;
 };
 
+/** A customer's own event feed (0022) — written only by DB triggers on rentals/payments. */
+export type Notification = {
+  id: string;
+  profile_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+/** Saved/favorite vehicle (0022). */
+export type CustomerFavorite = {
+  id: string;
+  customer_id: string;
+  vehicle_id: string;
+  created_at: string;
+};
+
+/** Digital check-in progress for one booking (0022) — written via save_rental_checkin(). */
+export type RentalCheckin = {
+  id: string;
+  rental_id: string;
+  customer_id: string;
+  license_confirmed: boolean;
+  address_confirmed: boolean;
+  emergency_contact_confirmed: boolean;
+  agreement_accepted: boolean;
+  agreement_accepted_at: string | null;
+  additional_notes: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Support/contact form submission (0022) — no staff inbox UI yet, see migration comment. */
+export type SupportMessage = {
+  id: string;
+  customer_id: string | null;
+  profile_id: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string;
+};
+
 export type VehicleIssue = {
   id: string;
   vehicle_id: string;
@@ -227,6 +280,7 @@ export type AppSettings = {
   mileage_limit_per_day: number | null;
   mileage_overage_fee: number | null;
   fuel_policy: string | null;
+  business_hours: string | null;
   updated_at: string;
 };
 
@@ -244,6 +298,20 @@ export type PublicVehicleListing = {
   seats: number | null;
   transmission: TransmissionType | null;
   body_type: BodyType | null;
+  /** Every uploaded photo, oldest first (0023) — null/empty when none uploaded. */
+  photo_storage_paths: string[] | null;
+};
+
+/** Read-only view (0023) — the subset of app_settings safe to show on a public vehicle page. */
+export type PublicRentalPolicy = {
+  currency: string;
+  grace_period_hours: number;
+  late_fee_per_day: number;
+  default_security_deposit: number;
+  mileage_limit_per_day: number | null;
+  mileage_overage_fee: number | null;
+  fuel_policy: string | null;
+  business_hours: string | null;
 };
 
 /** Read-only view (0012) — anon-readable subset of `app_settings`. */
@@ -253,6 +321,7 @@ export type PublicBusinessInfo = {
   address: string | null;
   phone: string | null;
   email: string | null;
+  business_hours: string | null;
 };
 
 /**
@@ -280,8 +349,13 @@ export type Database = {
       vehicle_issues: Table<VehicleIssue>;
       maintenance: Table<Maintenance>;
       app_settings: Table<AppSettings>;
+      notifications: Table<Notification>;
+      customer_favorites: Table<CustomerFavorite>;
+      rental_checkins: Table<RentalCheckin>;
+      support_messages: Table<SupportMessage>;
       public_vehicle_listings: Table<PublicVehicleListing>;
       public_business_info: Table<PublicBusinessInfo>;
+      public_rental_policy: Table<PublicRentalPolicy>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -371,6 +445,24 @@ export type Database = {
           p_emergency_contact_name?: string | null;
           p_emergency_contact_phone?: string | null;
         },
+        void
+      >;
+      /** SECURITY DEFINER — see supabase/migrations/0022_customer_dashboard_extensions.sql */
+      mark_notification_read: Fn<{ p_notification_id: string }, void>;
+      mark_all_notifications_read: Fn<Record<string, never>, void>;
+      save_rental_checkin: Fn<
+        {
+          p_rental_id: string;
+          p_license_confirmed: boolean;
+          p_address_confirmed: boolean;
+          p_emergency_contact_confirmed: boolean;
+          p_agreement_accepted: boolean;
+          p_additional_notes?: string | null;
+        },
+        void
+      >;
+      update_my_communication_prefs: Fn<
+        { p_email_notifications_enabled: boolean; p_sms_notifications_enabled: boolean },
         void
       >;
     };

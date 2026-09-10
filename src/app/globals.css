@@ -128,3 +128,12 @@
     @apply font-sans;
   }
 }
+
+/* Printing a booking's payment/receipt section (see PrintButton) should
+   read like an invoice, not a screenshot of the whole app chrome. */
+@media print {
+  aside,
+  header {
+    display: none !important;
+  }
+}

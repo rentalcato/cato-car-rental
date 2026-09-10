@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { updateBusinessSettings, type SettingsActionState } from "@/lib/settings/actions";
 import type { AppSettings } from "@/types/database.types";
 
@@ -46,6 +47,22 @@ export function BusinessSettingsForm({ settings }: { settings: AppSettings }) {
           <Label htmlFor="address">Address</Label>
           <Input id="address" name="address" defaultValue={settings.address ?? ""} />
           <FieldError errors={errors.address} />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="business_hours">
+            Opening hours{" "}
+            <span className="text-xs font-normal text-muted-foreground">
+              (shown to customers on their pickup &amp; return screen)
+            </span>
+          </Label>
+          <Textarea
+            id="business_hours"
+            name="business_hours"
+            rows={2}
+            placeholder={"Mon–Sat: 8:00 AM – 6:00 PM\nSun: By appointment"}
+            defaultValue={settings.business_hours ?? ""}
+          />
+          <FieldError errors={errors.business_hours} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>

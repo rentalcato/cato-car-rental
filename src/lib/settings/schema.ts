@@ -17,6 +17,7 @@ export const businessSettingsFormSchema = z.object({
     .toUpperCase(),
   timezone: z.string().trim().min(1, { error: "Enter a timezone." }).max(60),
   tax_rate: z.coerce.number().min(0, { error: "Tax rate can't be negative." }).max(100),
+  business_hours: z.preprocess(emptyToUndefined, z.string().trim().max(300).optional()),
 });
 
 export type BusinessSettingsFormValues = z.infer<typeof businessSettingsFormSchema>;

@@ -11,7 +11,14 @@ import {
   CUSTOMER_UPLOADABLE_DOCUMENT_TYPES,
   MAX_DOCUMENT_SIZE_BYTES,
 } from "@/lib/constants";
-import { bookingFormSchema, contactFormSchema, fieldErrors, profileFormSchema } from "@/lib/account/schema";
+import {
+  bookingFormSchema,
+  communicationPrefsFormSchema,
+  contactFormSchema,
+  fieldErrors,
+  passwordFormSchema,
+  profileFormSchema,
+} from "@/lib/account/schema";
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -77,7 +84,11 @@ export async function requestReservation(
 
   revalidatePath("/account");
   revalidatePath(`/account/fleet/${vehicleId}`);
-  redirect("/account");
+  // ?booked=1 drives the one-time confirmation banner on the dashboard
+  // (src/app/account/page.tsx) — the actual persistent record of this
+  // booking is the notification the rentals_notify_status_change
+  // trigger (0022) already wrote, and the new trip card itself.
+  redirect("/account?booked=1");
 }
 
 export interface CancelActionState {
@@ -273,6 +284,49 @@ export async function uploadMyDocument(
   });
 
   revalidatePath("/account");
+  return { success: true };
+}
+
+/** Supabase updates the current session's password directly — no separate "current password" check, matching supabase-js's own updateUser() contract for an already-authenticated session. */
+export async function updateMyPassword(
+  _prevState: ProfileActionState,
+  formData: FormData
+): Promise<ProfileActionState> {
+  await requireUser();
+
+  const parsed = passwordFormSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrors(parsed.error) };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return { error: error.message };
+
+  return { success: true };
+}
+
+/** update_my_communication_prefs() (0022) — the only two columns this can ever touch. */
+export async function updateMyCommunicationPrefs(
+  _prevState: ProfileActionState,
+  formData: FormData
+): Promise<ProfileActionState> {
+  await requireUser();
+
+  const parsed = communicationPrefsFormSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrors(parsed.error) };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_my_communication_prefs", {
+    p_email_notifications_enabled: parsed.data.email_notifications_enabled,
+    p_sms_notifications_enabled: parsed.data.sms_notifications_enabled,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/account/profile");
   return { success: true };
 }
 

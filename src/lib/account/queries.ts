@@ -2,7 +2,8 @@ import "server-only";
 
 import { getCurrentUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
-import type { Customer, Payment, Profile, Rental, Vehicle } from "@/types/database.types";
+import { getVehiclePhotos, type VehiclePhotoWithUrl } from "@/lib/vehicles/queries";
+import type { Customer, Payment, Profile, Rental, Vehicle, VehicleIssue } from "@/types/database.types";
 
 export interface MyAccount {
   profile: Profile;
@@ -61,4 +62,60 @@ export async function getMyPayments(customerId: string | undefined): Promise<Pay
 
   if (error) throw error;
   return (data ?? []) as Payment[];
+}
+
+export interface MyBookingDetail extends Rental {
+  vehicle: Vehicle | null;
+  photos: VehiclePhotoWithUrl[];
+  payments: Payment[];
+  issues: VehicleIssue[];
+}
+
+/**
+ * Everything the booking detail screen (/account/rentals/[id]) needs, in
+ * one call. Scoped to the caller's own customer_id up front — never
+ * trusts rentalId alone — same belt-and-suspenders as
+ * getMyDocumentAccessUrl(): RLS (rentals_select_own, 0014) would already
+ * block a foreign booking, this just returns a clean null instead of an
+ * empty-looking page.
+ */
+export async function getMyBookingById(
+  customerId: string | undefined,
+  rentalId: string
+): Promise<MyBookingDetail | null> {
+  if (!customerId) return null;
+
+  const supabase = await createClient();
+  const { data: rental, error } = await supabase
+    .from("rentals")
+    .select("*")
+    .eq("id", rentalId)
+    .eq("customer_id", customerId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!rental) return null;
+
+  const [{ data: vehicle }, photos, { data: payments }, { data: issues }] = await Promise.all([
+    supabase.from("vehicles").select("*").eq("id", (rental as Rental).vehicle_id).maybeSingle(),
+    getVehiclePhotos((rental as Rental).vehicle_id),
+    supabase
+      .from("payments")
+      .select("*")
+      .eq("rental_id", rentalId)
+      .order("payment_date", { ascending: false }),
+    supabase
+      .from("vehicle_issues")
+      .select("*")
+      .eq("rental_id", rentalId)
+      .order("reported_date", { ascending: false }),
+  ]);
+
+  return {
+    ...(rental as Rental),
+    vehicle: (vehicle as Vehicle | null) ?? null,
+    photos,
+    payments: (payments as Payment[] | null) ?? [],
+    issues: (issues as VehicleIssue[] | null) ?? [],
+  };
 }

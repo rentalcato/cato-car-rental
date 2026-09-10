@@ -35,6 +35,7 @@ export const AUDIT_ACTIONS = [
   "rental_completed",
   "payment_recorded",
   "payment_refunded",
+  "rental_checkin_completed",
 ] as const;
 
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
@@ -58,6 +59,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   rental_completed: "Rental completed",
   payment_recorded: "Payment recorded",
   payment_refunded: "Payment refunded",
+  rental_checkin_completed: "Digital check-in completed",
 };
 
 export const AUDIT_ENTITY_TYPES = ["customer", "profile", "vehicle", "rental", "payment"] as const;

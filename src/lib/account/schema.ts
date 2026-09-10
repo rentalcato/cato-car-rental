@@ -43,6 +43,25 @@ export const contactFormSchema = z.object({
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
+export const passwordFormSchema = z
+  .object({
+    password: z.string().min(8, { error: "Use at least 8 characters." }).max(72),
+    confirm_password: z.string(),
+  })
+  .refine((values) => values.password === values.confirm_password, {
+    error: "Passwords don't match.",
+    path: ["confirm_password"],
+  });
+
+export type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+
+export const communicationPrefsFormSchema = z.object({
+  email_notifications_enabled: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+  sms_notifications_enabled: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+});
+
+export type CommunicationPrefsFormValues = z.infer<typeof communicationPrefsFormSchema>;
+
 export function fieldErrors(error: z.ZodError): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const issue of error.issues) {
