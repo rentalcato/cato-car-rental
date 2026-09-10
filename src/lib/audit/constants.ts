@@ -36,6 +36,7 @@ export const AUDIT_ACTIONS = [
   "payment_recorded",
   "payment_refunded",
   "rental_checkin_completed",
+  "loyalty_reward_redeemed",
 ] as const;
 
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
@@ -60,6 +61,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   payment_recorded: "Payment recorded",
   payment_refunded: "Payment refunded",
   rental_checkin_completed: "Digital check-in completed",
+  loyalty_reward_redeemed: "Loyalty reward redeemed",
 };
 
 export const AUDIT_ENTITY_TYPES = ["customer", "profile", "vehicle", "rental", "payment"] as const;

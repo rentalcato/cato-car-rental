@@ -10,6 +10,7 @@ import type {
   PublicRentalPolicy,
   PublicVehicleListing,
   ReservationApprovalStatus,
+  Vehicle,
   VehicleStatus,
 } from "@/types/database.types";
 
@@ -265,10 +266,13 @@ export async function getBookableVehicles(search?: string): Promise<FleetCard[]>
  * anon-readable public_vehicle_listings view as getFleetShowcase() — never
  * the RLS-locked vehicles table — so it can only ever return what's
  * currently featured and non-archived (see 0012/0013), in a status this
- * view is willing to show at all (0024: available/reserved/rented/
- * overdue — never maintenance/damaged/out_of_service). Returns null if
- * the id doesn't match any such row (bad id, or the vehicle since got
- * archived/unfeatured/taken out of service).
+ * view is willing to show at all: 'available', or 'reserved' with a
+ * still-*pending* reservation (0025 — the moment one is approved, or was
+ * staff-created and so never pending, the vehicle comes off this view
+ * entirely until it's cancelled or returned). Returns null otherwise —
+ * bad id, archived/unfeatured/out of service, or exactly that "approved,
+ * held" case. See getVehicleListingByIdForAccount() for the one context
+ * that still needs to reach a hidden vehicle: its own renter.
  */
 export async function getVehicleListingById(
   id: string
@@ -295,6 +299,64 @@ export async function getVehicleListingById(
     (path) => supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl
   );
   return { ...card, colour: listing.colour };
+}
+
+/**
+ * The account-side Vehicle Details page's lookup — tries the public
+ * listing first, and if that comes back null (0025: hidden because it's
+ * approved/rented/etc., or just not featured), falls back to the real
+ * `vehicles` table scoped to whatever this signed-in customer can
+ * legitimately read there: vehicles_select_own_rental (0014) or
+ * vehicles_select_own_favorite (0022) — i.e. a vehicle they've actually
+ * rented or favorited. Nothing extra to check here: if neither policy
+ * applies, the query itself returns nothing, same as any other RLS-gated
+ * read. Not bookable either way (isBookable: false) — this path only
+ * exists so a customer's own booking doesn't turn into a dead link.
+ */
+export async function getVehicleListingByIdForAccount(
+  id: string
+): Promise<(FleetCard & { colour: string | null }) | null> {
+  const publicListing = await getVehicleListingById(id);
+  if (publicListing) return publicListing;
+
+  const supabase = await createClient();
+  const [{ data: vehicle }, { data: photos }] = await Promise.all([
+    supabase.from("vehicles").select("*").eq("id", id).maybeSingle(),
+    supabase.from("vehicle_photos").select("storage_path").eq("vehicle_id", id).order("created_at", { ascending: true }),
+  ]);
+  if (!vehicle) return null;
+
+  const v = vehicle as Vehicle;
+  const category = v.body_type
+    ? BODY_TYPE_LABELS[v.body_type]
+    : v.fuel_type === "electric"
+      ? "Electric"
+      : "Sedan / SUV";
+  const paths = (photos ?? []).map((p) => p.storage_path);
+  const imageUrls =
+    paths.length > 0
+      ? paths.map((path) => supabase.storage.from(VEHICLE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl)
+      : [assignFallbackImage(v.id)];
+
+  return {
+    id: v.id,
+    make: v.make || "Vehicle",
+    model: v.model || "",
+    year: v.year,
+    category,
+    seats: v.seats ?? 5,
+    transmission: v.transmission ? TRANSMISSION_LABELS[v.transmission] : "Automatic",
+    dailyRate: v.daily_rental_rate,
+    imageUrl: imageUrls[0]!,
+    imageUrls,
+    isDemo: false,
+    bodyType: v.body_type,
+    fuelType: v.fuel_type,
+    vehicleStatus: v.vehicle_status,
+    currentRentalApprovalStatus: null,
+    isBookable: false,
+    colour: v.colour,
+  };
 }
 
 /**

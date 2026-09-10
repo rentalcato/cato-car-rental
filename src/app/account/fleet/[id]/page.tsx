@@ -19,17 +19,20 @@ import {
   getPublicBusinessInfo,
   getPublicRentalPolicy,
   getSimilarVehicles,
-  getVehicleListingById,
+  getVehicleListingByIdForAccount,
 } from "@/lib/marketing/queries";
 import { computePricingTiers, getEstimatedDoors, getVehicleDescription, getVehicleFeatures } from "@/lib/vehicles/details";
 import { getVehicleAvailability } from "@/lib/vehicles/availability";
 import { FUEL_TYPE_LABELS } from "@/lib/vehicles/labels";
 
 // AccountLayout already calls requireUser() for everything under /account.
-// Reads the same anon/authenticated-readable public_vehicle_listings view
-// as the public /fleet/[id] page (0012/0017) — booking access itself is
-// gated by whether this account is linked to a customer record (0014),
-// not by anything vehicle-related.
+// getVehicleListingByIdForAccount() reads the same public listing the
+// homepage/marketing site does, falling back to this customer's own
+// rental/favorite access (0014/0022) if the vehicle's been approved/
+// rented and so dropped off that public listing (0025) — otherwise their
+// own active booking would 404. Booking access itself is gated by
+// whether this account is linked to a customer record (0014), not by
+// anything vehicle-related.
 export default async function AccountFleetVehiclePage({
   params,
 }: {
@@ -37,7 +40,7 @@ export default async function AccountFleetVehiclePage({
 }) {
   const { id } = await params;
   const [vehicle, account, business, policy] = await Promise.all([
-    getVehicleListingById(id),
+    getVehicleListingByIdForAccount(id),
     getMyAccount(),
     getPublicBusinessInfo(),
     getPublicRentalPolicy(),

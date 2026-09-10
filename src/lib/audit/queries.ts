@@ -250,6 +250,11 @@ function describeMetadata(action: string, metadata: Record<string, unknown> | nu
       const selfService = metadata.self_service ? " (self-service)" : "";
       return [type, file].filter(Boolean).join(" — ") + selfService || null;
     }
+    case "loyalty_reward_redeemed": {
+      const rewardName = metadata.reward_name ? String(metadata.reward_name) : null;
+      const points = metadata.points_required ? `${metadata.points_required} pts` : null;
+      return [rewardName, points].filter(Boolean).join(" — ") || null;
+    }
     default:
       return null;
   }
